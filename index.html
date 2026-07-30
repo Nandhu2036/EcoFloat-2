@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoFloat // Smart City Monitoring Dashboard</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0..1,0" rel="stylesheet">
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Embedded Premium Styling -->
+  <style>
+    /* ==========================================================================
+       1. DESIGN SYSTEM & CSS VARIABLES
+       ========================================================================== */
+    :root {
+      --bg-dark: #070709;
+      --bg-surface: rgba(18, 18, 22, 0.7);
+      --bg-surface-elevated: rgba(30, 30, 38, 0.85);
+      --bg-glass-card: rgba(13, 13, 17, 0.65);
+      
+      --color-primary: #0ea5e9;       /* Sleek Cyan */
+      --color-secondary: #0d9488;     /* Sleek Teal */
+      --color-accent: #6366f1;        /* Premium Indigo */
+      --color-warning: #f59e0b;       /* Amber Alert */
+      --color-danger: #ef4444;        /* Crimson Plume */
+      --color-success: #10b981;       /* Emerald Safe */
+      
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(14, 165, 233, 0.15);
+      
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-header: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      
+      --glass-blur: blur(16px);
+      --shadow-premium: 0 16px 36px rgba(0, 0, 0, 0.4);
+      --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.01);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-primary);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      overflow-x: hidden;
+    }
+
+    /* ==========================================================================
+       2. SIDE NAVIGATION RAIL
+       ========================================================================== */
+    .sidebar {
+      background: rgba(10, 10, 14, 0.85);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0;
+      z-index: 10;
+      backdrop-filter: var(--glass-blur);
+    }
+
+    .sidebar .logo-container {
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .sidebar .logo-container span {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.3));
+    }
+
+    .nav-items {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex-grow: 1;
+    }
+
+    .nav-item {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      color: var(--color-primary);
+      background: rgba(14, 165, 233, 0.08);
+      border-color: rgba(14, 165, 233, 0.2);
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.15);
+    }
+
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 14px;
+      width: 4px;
+      height: 20px;
+      background: var(--color-primary);
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 8px var(--color-primary);
+    }
+
+    .nav-item .tooltip {
+      position: absolute;
+      left: 64px;
+      background: #111115;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--font-header);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition-smooth);
+      transform: translateX(-10px);
+      box-shadow: var(--shadow-premium);
+    }
+
+    .nav-item:hover .tooltip {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .sidebar-footer {
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .sidebar-footer:hover {
+      color: var(--color-danger);
+    }
+
+    /* ==========================================================================
+       3. MAIN LAYOUT
+       ========================================================================== */
+    .main-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Header Bar */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-info h1 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-info p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--font-header);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-success);
+      box-shadow: 0 0 8px var(--color-success);
+    }
+
+    .status-dot.alerting {
+      background: var(--color-danger);
+      box-shadow: 0 0 8px var(--color-danger);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+
+    .system-clock {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--color-primary);
+      background: rgba(14, 165, 233, 0.06);
+      border: 1px solid rgba(14, 165, 233, 0.15);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    /* Summary Stats Grid */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .summary-card {
+      background: var(--bg-glass-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      backdrop-filter: var(--glass-blur);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card:hover {
+      border-color: rgba(14, 165, 233, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--card-color, var(--color-primary));
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--card-bg, rgba(14, 165, 233, 0.08));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--card-color, var(--color-primary));
+    }
+
+    .card-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-header);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: var(--font-display);
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+
+    .card-subtext {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       4. VIEW PANELS CONTROL (TABS SWITCHING)
+       ========================================================================== */
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .view-panel.active-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-content-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .grid-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Panel Card Structure */
+    .panel-card {
+      background: var(--bg-glass-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-premium);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+    }
+
+    .panel-title span.material-symbols-outlined {
+      color: var(--color-primary);
+    }
+
+    .panel-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-body {
+      padding: 20px;
+      position: relative;
+      flex-grow: 1;
+    }
+
+    /* Map Styling */
+    #lake-map {
+      height: 400px;
+      width: 100%;
+      border-radius: 12px;
+      background: #0f1013;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1;
+    }
+    
+    #full-lake-map {
+      height: 600px;
+      width: 100%;
+      border-radius: 12px;
+      background: #0f1013;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1;
+    }
+
+    /* Controls Panel */
+    .control-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 12px;
+      border-radius: 10px;
+      font-family: var(--font-header);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-action span.material-symbols-outlined {
+      font-size: 22px;
+      color: var(--text-secondary);
+      transition: var(--transition-smooth);
+    }
+
+    .btn-action:hover {
+      background: rgba(14, 165, 233, 0.08);
+      border-color: rgba(14, 165, 233, 0.3);
+      color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    .btn-action:hover span.material-symbols-outlined {
+      color: var(--color-primary);
+      filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.4));
+    }
+
+    .btn-action.active-action {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: rgba(99, 102, 241, 0.3);
+      color: var(--color-accent);
+    }
+    .btn-action.active-action span.material-symbols-outlined {
+      color: var(--color-accent);
+    }
+
+    /* Active Rover Controller Selection */
+    .rover-selector-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .rover-selector-label {
+      font-size: 13px;
+      font-family: var(--font-header);
+      color: var(--text-secondary);
+    }
+
+    .rover-select-dropdown {
+      background: #111115;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: var(--font-header);
+      font-weight: 500;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Telemetry Charts container */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 200px;
+      width: 100%;
+    }
+
+    /* Table telemetry grid */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .telemetry-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-header);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .telemetry-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .telemetry-table td {
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      vertical-align: middle;
+      color: var(--text-primary);
+    }
+
+    .telemetry-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .rover-id-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .badge-mode {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .badge-mode.auto {
+      color: var(--color-primary);
+      background: rgba(14, 165, 233, 0.08);
+      border-color: rgba(14, 165, 233, 0.15);
+    }
+
+    .badge-mode.manual {
+      color: var(--color-warning);
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.15);
+    }
+
+    .badge-mode.retreat {
+      color: var(--color-accent);
+      background: rgba(99, 102, 241, 0.08);
+      border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    .progress-bar-container {
+      width: 80px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    /* Live console */
+    .console-log {
+      background: #060608;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      height: 140px;
+      padding: 12px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+    }
+
+    .log-tag {
+      font-weight: 600;
+    }
+
+    .log-tag.sys { color: var(--color-accent); }
+    .log-tag.nav { color: var(--color-primary); }
+    .log-tag.sens { color: var(--color-secondary); }
+    .log-tag.act { color: var(--color-warning); }
+    .log-tag.alert { color: var(--color-danger); }
+
+    .log-message {
+      color: #dfdfdf;
+    }
+
+    /* Map Custom Styling */
+    .leaflet-bar {
+      border: 1px solid var(--border-color) !important;
+      box-shadow: var(--shadow-premium) !important;
+    }
+    .leaflet-bar a {
+      background-color: #121216 !important;
+      color: var(--text-primary) !important;
+      border-bottom: 1px solid var(--border-color) !important;
+    }
+    .leaflet-bar a:hover {
+      background-color: var(--color-primary) !important;
+      color: #fff !important;
+    }
+    .leaflet-container {
+      font-family: var(--font-body) !important;
+    }
+    
+    .boat-icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .boat-icon-circle {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1.5px solid var(--color-primary);
+      box-shadow: 0 0 10px var(--color-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #fff;
+      font-weight: 700;
+      transition: var(--transition-smooth);
+    }
+    .boat-icon-circle.active-rover {
+      border-color: var(--color-accent);
+      background: rgba(99, 102, 241, 0.25);
+      box-shadow: 0 0 15px var(--color-accent);
+    }
+    .boat-heading-arrow {
+      position: absolute;
+      top: -8px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 8px solid var(--color-primary);
+    }
+    .boat-icon-circle.active-rover .boat-heading-arrow {
+      border-bottom-color: var(--color-accent);
+    }
+
+    /* Waypoint flag icon */
+    .waypoint-flag-icon {
+      color: var(--color-warning);
+      filter: drop-shadow(0 0 4px var(--color-warning));
+      font-size: 24px !important;
+    }
+
+    /* Info Modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-content {
+      background: #111116;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: var(--shadow-premium);
+    }
+
+    .modal-header {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--color-primary);
+    }
+
+    .modal-body {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .modal-btn {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border: none;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-family: var(--font-header);
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+      transition: var(--transition-smooth);
+    }
+
+    .modal-btn:hover {
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Config panel inputs styling */
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .config-group label {
+      font-size: 12px;
+      font-family: var(--font-header);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .config-group input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+    .config-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--color-primary);
+      transition: var(--transition-smooth);
+    }
+    .config-group input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .config-val-indicator {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-primary);
+      margin-top: 4px;
+      text-align: right;
+    }
+    .config-group input[type="number"] {
+      background: #121216;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 8px;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .config-group input[type="number"]:focus {
+      border-color: var(--color-primary);
+    }
+
+    /* Swarm Specs & Buoyancy Calculations Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .spec-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .spec-card h3 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-family: var(--font-header);
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    }
+    .spec-row span:first-child {
+      color: var(--text-secondary);
+    }
+    .spec-row span:last-child {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       SIDE NAVIGATION RAIL
+       ========================================================================== -->
+  <aside class="sidebar">
+    <div class="logo-container">
+      <span>EF</span>
+    </div>
+    
+    <nav class="nav-items">
+      <div class="nav-item active" id="nav-overview" onclick="switchPanel('overview')">
+        <span class="material-symbols-outlined">dashboard</span>
+        <div class="tooltip">Overview</div>
+      </div>
+      <div class="nav-item" id="nav-map" onclick="switchPanel('map')">
+        <span class="material-symbols-outlined">map</span>
+        <div class="tooltip">Mission Map</div>
+      </div>
+      <div class="nav-item" id="nav-swarm" onclick="switchPanel('swarm')">
+        <span class="material-symbols-outlined">hub</span>
+        <div class="tooltip">Swarm Details</div>
+      </div>
+      <div class="nav-item" id="nav-analytics" onclick="switchPanel('analytics')">
+        <span class="material-symbols-outlined">equalizer</span>
+        <div class="tooltip">Data Reports</div>
+      </div>
+      <div class="nav-item" id="nav-settings" onclick="switchPanel('settings')">
+        <span class="material-symbols-outlined">settings_suggest</span>
+        <div class="tooltip">System Settings</div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer" onclick="emergencyStop()">
+      <span class="material-symbols-outlined" style="font-size: 28px;">gpp_maybe</span>
+    </div>
+  </aside>
+
+  <!-- ==========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================== -->
+  <main class="main-container">
+    
+    <!-- Top Header -->
+    <header class="dashboard-header">
+      <div class="header-info">
+        <h1>ECO-FLOAT // SMART CITY SWARM CONTROLLER</h1>
+        <p>Telemetry, Solid Waste Collection & Water Quality Remediation Platform (Velachery Lake, Chennai)</p>
+      </div>
+      <div class="header-status">
+        <div class="status-badge">
+          <div class="status-dot" id="system-status-dot"></div>
+          <span id="system-status-text">SWARM ACTIVE - STABLE</span>
+        </div>
+        <div class="system-clock" id="live-clock">11:17:27</div>
+      </div>
+    </header>
+
+    <!-- Top Key Metrics Row -->
+    <section class="summary-grid">
+      <!-- Metric 1: WQI -->
+      <div class="summary-card" style="--card-color: var(--color-secondary); --card-bg: rgba(13, 148, 136, 0.08);">
+        <div class="card-icon">
+          <span class="material-symbols-outlined">water_drop</span>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Swarm WQI Avg</span>
+          <span class="card-value" id="metric-wqi">74.2</span>
+          <span class="card-subtext" id="metric-wqi-status" style="color: var(--color-success);">Good Condition</span>
+        </div>
+      </div>
+
+      <!-- Metric 2: Battery Avg -->
+      <div class="summary-card" style="--card-color: var(--color-primary); --card-bg: rgba(14, 165, 233, 0.08);">
+        <div class="card-icon">
+          <span class="material-symbols-outlined" id="battery-icon">battery_charging_80</span>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Swarm Battery</span>
+          <span class="card-value" id="metric-battery">88%</span>
+          <span class="card-subtext" style="color: var(--color-primary);">Charging (Solar Roof)</span>
+        </div>
+      </div>
+
+      <!-- Metric 3: Plastics -->
+      <div class="summary-card" style="--card-color: var(--color-accent); --card-bg: rgba(99, 102, 241, 0.08);">
+        <div class="card-icon">
+          <span class="material-symbols-outlined">delete_sweep</span>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Plastics Collected</span>
+          <span class="card-value" id="metric-plastics">4.3 kg</span>
+          <span class="card-subtext">Cumulative Swarm Total</span>
+        </div>
+      </div>
+
+      <!-- Metric 4: Biomass / Algae -->
+      <div class="summary-card" style="--card-color: var(--color-warning); --card-bg: rgba(245, 158, 11, 0.08);">
+        <div class="card-icon">
+          <span class="material-symbols-outlined">grass</span>
+        </div>
+        <div class="card-content">
+          <span class="card-label">Algae Harvested</span>
+          <span class="card-value" id="metric-algae">5.7 kg</span>
+          <span class="card-subtext">Chlorophyll Extraction</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         PANEL 1: OVERVIEW DASHBOARD
+         ========================================================================== -->
+    <div class="view-panel active-panel" id="panel-overview">
+      <div class="dashboard-content-grid">
+        
+        <!-- Column Left: Map & Controls -->
+        <div class="grid-column">
+          
+          <!-- Interactive Live Map Panel -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">location_searching</span>
+                <span>LIVE MAPPING & COORDINATION FEED</span>
+              </div>
+              <div class="panel-controls">
+                <span style="font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 12px; color: var(--color-warning);">touch_app</span>
+                  Click map to append waypoints
+                </span>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 12px;">
+              <div id="lake-map"></div>
+            </div>
+          </div>
+
+          <!-- System Controls Panel -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">settings_remote</span>
+                <span>SWARM MANAGEMENT CONSOLE</span>
+              </div>
+            </div>
+            <div class="panel-body">
+              <!-- Selector to choose active rover to issue command -->
+              <div class="rover-selector-container">
+                <div class="rover-selector-label">
+                  Active Command Target:
+                </div>
+                <select class="rover-select-dropdown" id="command-rover-select" onchange="changeActiveTarget(this.value)">
+                  <option value="1">EcoFloat-1 (Primary)</option>
+                  <option value="2">EcoFloat-2 (East-Sector)</option>
+                  <option value="3">EcoFloat-3 (West-Sector)</option>
+                </select>
+              </div>
+
+              <!-- Action buttons grid -->
+              <div class="control-actions-grid">
+                <button class="btn-action" id="btn-manual-override" onclick="toggleManualMode()">
+                  <span class="material-symbols-outlined" id="manual-mode-icon">sports_esports</span>
+                  <span id="manual-mode-btn-text">Manual Override</span>
+                </button>
+                
+                <button class="btn-action" id="btn-deploy-chemical" onclick="deployChemicalNeutralizer()">
+                  <span class="material-symbols-outlined">biotech</span>
+                  <span>Neutralize Plume</span>
+                </button>
+
+                <button class="btn-action" onclick="emptyNets()">
+                  <span class="material-symbols-outlined">delete_sweep</span>
+                  <span>Clear Nets</span>
+                </button>
+
+                <button class="btn-action" onclick="runDiagnostics()">
+                  <span class="material-symbols-outlined">network_check</span>
+                  <span>Run Diagnostic</span>
+                </button>
+                
+                <button class="btn-action" onclick="returnToBase()">
+                  <span class="material-symbols-outlined">home_pin</span>
+                  <span>Return to Base</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Column Right: Telemetry Details, Telemetry Graph & Console Logs -->
+        <div class="grid-column">
+          
+          <!-- Swarm Telemetry Detail Table -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">dataset</span>
+                <span>SWARM TELEMETRY DETAIL</span>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+              <div class="table-container">
+                <table class="telemetry-table" id="swarm-telemetry-table">
+                  <thead>
+                    <tr>
+                      <th>Vessel ID</th>
+                      <th>Mode</th>
+                      <th>Battery</th>
+                      <th>Net Load</th>
+                      <th>Current Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Row 1: EcoFloat-1 -->
+                    <tr id="rover-row-1" style="cursor: pointer;" onclick="selectRoverFromRow(1)">
+                      <td>
+                        <div class="rover-id-cell">
+                          <span class="status-dot"></span>
+                          <span>EcoFloat-1</span>
+                        </div>
+                      </td>
+                      <td><span class="badge-mode auto" id="row-mode-1">AUTO</span></td>
+                      <td id="row-battery-1">89%</td>
+                      <td>
+                        <div class="progress-bar-container">
+                          <div class="progress-bar-fill" id="row-net-1" style="width: 42%;"></div>
+                        </div>
+                        <span style="font-size: 10px; margin-left: 4px;" id="row-net-text-1">42%</span>
+                      </td>
+                      <td id="row-act-1" style="color: var(--text-secondary);">Sweeping Lake Center</td>
+                    </tr>
+                    
+                    <!-- Row 2: EcoFloat-2 -->
+                    <tr id="rover-row-2" style="cursor: pointer;" onclick="selectRoverFromRow(2)">
+                      <td>
+                        <div class="rover-id-cell">
+                          <span class="status-dot"></span>
+                          <span>EcoFloat-2</span>
+                        </div>
+                      </td>
+                      <td><span class="badge-mode auto" id="row-mode-2">AUTO</span></td>
+                      <td id="row-battery-2">86%</td>
+                      <td>
+                        <div class="progress-bar-container">
+                          <div class="progress-bar-fill" id="row-net-2" style="width: 61%; background-color: var(--color-warning);"></div>
+                        </div>
+                        <span style="font-size: 10px; margin-left: 4px;" id="row-net-text-2">61%</span>
+                      </td>
+                      <td id="row-act-2" style="color: var(--text-secondary);">Analyzing Algae Plume</td>
+                    </tr>
+
+                    <!-- Row 3: EcoFloat-3 -->
+                    <tr id="rover-row-3" style="cursor: pointer;" onclick="selectRoverFromRow(3)">
+                      <td>
+                        <div class="rover-id-cell">
+                          <span class="status-dot"></span>
+                          <span>EcoFloat-3</span>
+                        </div>
+                      </td>
+                      <td><span class="badge-mode auto" id="row-mode-3">AUTO</span></td>
+                      <td id="row-battery-3">90%</td>
+                      <td>
+                        <div class="progress-bar-container">
+                          <div class="progress-bar-fill" id="row-net-3" style="width: 27%;"></div>
+                        </div>
+                        <span style="font-size: 10px; margin-left: 4px;" id="row-net-text-3">27%</span>
+                      </td>
+                      <td id="row-act-3" style="color: var(--text-secondary);">Waypoint Navigation</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Charts Panel -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">insights</span>
+                <span>ACTIVE VESSEL WATER TELEMETRY</span>
+              </div>
+              <div class="panel-controls">
+                <span id="chart-rover-badge" style="font-size: 11px; font-weight: 600; color: var(--color-primary); background: rgba(14, 165, 233, 0.08); padding: 2px 8px; border-radius: 4px;">
+                  EcoFloat-1
+                </span>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="charts-grid">
+                <div class="chart-container">
+                  <canvas id="liveTelemetryChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Log Console Panel -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">terminal</span>
+                <span>SYSTEM EVENT MONITOR</span>
+              </div>
+              <div class="panel-controls">
+                <button onclick="clearLogs()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center;" title="Clear console">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                </button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="console-log" id="console-output">
+                <!-- Logs appended dynamically -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PANEL 2: EXPANDED MISSION MAP
+         ========================================================================== -->
+    <div class="view-panel" id="panel-map">
+      <div class="dashboard-content-grid">
+        <div class="grid-column" style="grid-column: span 2;">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="material-symbols-outlined">map</span>
+                <span>FULL SCREEN MISSION MAP CONTROL</span>
+              </div>
+              <div class="panel-controls">
+                <!-- Select lake preset -->
+                <label style="font-size: 12px; color: var(--text-secondary); font-family: var(--font-header);">Select Chennai Water Body:</label>
+                <select class="rover-select-dropdown" id="lake-preset-select" onchange="changeLakePreset(this.value)">
+                  <option value="velachery">Velachery Lake, Chennai</option>
+                  <option value="retteri">Retteri Lake, Chennai</option>
+                  <option value="porur">Porur Lake, Chennai</option>
+                </select>
+                
+                <button class="btn-action" style="padding: 6px 12px; flex-direction: row; gap: 4px;" onclick="clearAllWaypoints()">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">cancel</span>
+                  <span>Clear Waypoints</span>
+                </button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 12px;">
+              <div id="full-lake-map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PANEL 3: SWARM DETAILS (METACENTRIC & BUOYANCY CALCULATIONS)
+         ========================================================================== -->
+    <div class="view-panel" id="panel-swarm">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">hub</span>
+            <span>METACENTRIC, HYDRODYNAMIC & HARDWARE SPECIFICATIONS</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="specs-grid">
+            
+            <!-- Hydrodynamic specifications -->
+            <div class="spec-card">
+              <h3>BUOYANCY & DISPLACEMENT</h3>
+              <div class="spec-row">
+                <span>Catamaran Geometry</span>
+                <span>Double-Hull (Twin Pontoon)</span>
+              </div>
+              <div class="spec-row">
+                <span>Dry Mass (m_dry)</span>
+                <span>6.0 kg</span>
+              </div>
+              <div class="spec-row">
+                <span>Designed Payload Limit</span>
+                <span>15.0 kg</span>
+              </div>
+              <div class="spec-row">
+                <span>Current Debris Weight</span>
+                <span id="spec-debris-weight">6.30 kg</span>
+              </div>
+              <div class="spec-row">
+                <span>Total Operational Weight</span>
+                <span id="spec-displaced-volume">12.30 kg</span>
+              </div>
+              <div class="spec-row">
+                <span>Cruising Draft Height</span>
+                <span id="spec-draft-fraction">43.9%</span>
+              </div>
+              <div class="spec-row">
+                <span>Twin Hull Volume (Max displacement)</span>
+                <span>28.0 Liters</span>
+              </div>
+            </div>
+
+            <!-- Metacentric height -->
+            <div class="spec-card">
+              <h3>STABILITY & HYDROSTATICS</h3>
+              <div class="spec-row">
+                <span>Center-to-Center Beam (B)</span>
+                <span>0.5 m</span>
+              </div>
+              <div class="spec-row">
+                <span>Metacentric Height (GM)</span>
+                <span>KB + BM - KG</span>
+              </div>
+              <div class="spec-row">
+                <span>Transverse Stability Roll</span>
+                <span>Damped (High Inertia)</span>
+              </div>
+              <div class="spec-row">
+                <span>Hull Material</span>
+                <span>Fiberglass Shell (PETG Ribs)</span>
+              </div>
+              <div class="spec-row">
+                <span>Passive Channel Flow</span>
+                <span>HDPE Debris Funnel Duct</span>
+              </div>
+              <div class="spec-row">
+                <span>Designed Water Line Draft</span>
+                <span>Cruising 75% at 21.0 kg limit</span>
+              </div>
+            </div>
+
+            <!-- Hardware blueprints -->
+            <div class="spec-card">
+              <h3>HARDWARE & CONTROL LOOP</h3>
+              <div class="spec-row">
+                <span>Primary Processor</span>
+                <span>Raspberry Pi 4 Model B</span>
+              </div>
+              <div class="spec-row">
+                <span>Battery Voltage (LiFePO4)</span>
+                <span id="spec-battery-voltage">12.86 V</span>
+              </div>
+              <div class="spec-row">
+                <span>Motor Driver Stack</span>
+                <span>BTS7960 High-Amp H-Bridge</span>
+              </div>
+              <div class="spec-row">
+                <span>Propulsion thrusters</span>
+                <span>Dual Transom Underwater DC</span>
+              </div>
+              <div class="spec-row">
+                <span>Camera Input Interface</span>
+                <span>120° Wide-Angle USB Camera</span>
+              </div>
+              <div class="spec-row">
+                <span>Optical Frame Resolution</span>
+                <span>640 x 480 pixels @ 10 FPS</span>
+              </div>
+              <div class="spec-row">
+                <span>LoRa Telemetry RF Link</span>
+                <span>RFM95W 433 MHz</span>
+              </div>
+            </div>
+
+            <!-- Edge AI TF Lite Inferences -->
+            <div class="spec-card" style="grid-column: span 2;">
+              <h3>EDGE AI DETECTOR & STEERING TELEMETRY</h3>
+              <div class="spec-row">
+                <span>Inference Engine Model</span>
+                <span>Quantized MobileNetV2-SSD (Edge-TPU / TFLite)</span>
+              </div>
+              <div class="spec-row">
+                <span>Object Tracking Class</span>
+                <span>Floating Solid Waste (PET Bottles, Cups, Packaging Wraps)</span>
+              </div>
+              <div class="spec-row">
+                <span>Target Detection Confidence</span>
+                <span id="spec-target-confidence">78.2%</span>
+              </div>
+              <div class="spec-row">
+                <span>Steering Controller Algorithm</span>
+                <span>Proportional Differential Speed Feedback (P-Loop)</span>
+              </div>
+              <div class="spec-row">
+                <span>Port Motor PWM Command</span>
+                <span id="spec-port-pwm">102 / 255</span>
+              </div>
+              <div class="spec-row">
+                <span>Starboard Motor PWM Command</span>
+                <span id="spec-starboard-pwm">98 / 255</span>
+              </div>
+              <div class="spec-row">
+                <span>Steering Error (Delta e)</span>
+                <span id="spec-steering-error">0.0 px (Centered)</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PANEL 4: HISTORICAL DATA REPORTS
+         ========================================================================== -->
+    <div class="view-panel" id="panel-analytics">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">analytics</span>
+            <span>HISTORICAL ANALYTICS & EXPORTS</span>
+          </div>
+          <div class="panel-controls">
+            <button class="btn-action" style="padding: 6px 12px; flex-direction: row; gap: 4px;" onclick="exportTelemetryCSV()">
+              <span class="material-symbols-outlined" style="font-size: 16px;">download</span>
+              <span>Export CSV Report</span>
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+            Extract historical telemetry reports compiled from ESP32/LoRa nodes and on-board Raspberry Pi telemetry JSON logs.
+          </p>
+          <div class="table-container">
+            <table class="telemetry-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Vessel</th>
+                  <th>Mean pH</th>
+                  <th>Mean DO (mg/L)</th>
+                  <th>Turbidity (NTU)</th>
+                  <th>Debris Collected (kg)</th>
+                  <th>Status Log</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-07-30 11:15:20</td>
+                  <td>EcoFloat-1</td>
+                  <td>7.38</td>
+                  <td>6.24</td>
+                  <td>11 NTU</td>
+                  <td>1.12 kg</td>
+                  <td>[OK] Mission Grid Node 1</td>
+                </tr>
+                <tr>
+                  <td>2026-07-30 11:15:55</td>
+                  <td>EcoFloat-2</td>
+                  <td>8.12</td>
+                  <td>5.10</td>
+                  <td>24 NTU</td>
+                  <td>4.54 kg</td>
+                  <td>[WARN] Algae Bloom Detected</td>
+                </tr>
+                <tr>
+                  <td>2026-07-30 11:16:30</td>
+                  <td>EcoFloat-3</td>
+                  <td>7.22</td>
+                  <td>6.81</td>
+                  <td>9 NTU</td>
+                  <td>0.88 kg</td>
+                  <td>[OK] Mission Grid Node 4</td>
+                </tr>
+                <tr>
+                  <td>2026-07-30 11:17:05</td>
+                  <td>EcoFloat-1</td>
+                  <td>7.41</td>
+                  <td>6.18</td>
+                  <td>12 NTU</td>
+                  <td>2.22 kg</td>
+                  <td>[OK] Mission Grid Node 2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PANEL 5: SYSTEM CONFIGURATION & CALIBRATIONS
+         ========================================================================== -->
+    <div class="view-panel" id="panel-settings">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">settings_suggest</span>
+            <span>SWARM CONFIGURATION & SENSOR CALIBRATION</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="settings-form" onsubmit="saveConfiguration(event)">
+            <div class="config-grid">
+              
+              <!-- Calibration 1: Kp steering -->
+              <div class="config-group">
+                <label for="config-kp">Proportional Steering Gain (Kp)</label>
+                <input type="range" id="config-kp" min="0.1" max="2.0" step="0.1" value="0.8" oninput="document.getElementById('indicator-kp').innerText = this.value">
+                <div class="config-val-indicator" id="indicator-kp">0.8</div>
+              </div>
+
+              <!-- Calibration 2: Base speed -->
+              <div class="config-group">
+                <label for="config-base-speed">Base Thruster PWM speed (0 - 255)</label>
+                <input type="range" id="config-base-speed" min="10" max="150" step="5" value="50" oninput="document.getElementById('indicator-base-speed').innerText = this.value">
+                <div class="config-val-indicator" id="indicator-base-speed">50</div>
+              </div>
+
+              <!-- Calibration 3: Confidence threshold -->
+              <div class="config-group">
+                <label for="config-confidence">TFLite Debris Confidence Limit (%)</label>
+                <input type="range" id="config-confidence" min="50" max="100" step="5" value="75" oninput="document.getElementById('indicator-confidence').innerText = this.value + '%'">
+                <div class="config-val-indicator" id="indicator-confidence">75%</div>
+              </div>
+
+              <!-- Calibration 4: Alarm threshold limit -->
+              <div class="config-group">
+                <label for="config-do-limit">DO Alarm Cutoff (mg/L)</label>
+                <input type="number" id="config-do-limit" step="0.1" value="4.5">
+              </div>
+
+              <div class="config-group">
+                <label for="config-ph-upper">pH Upper Limit Threshold</label>
+                <input type="number" id="config-ph-upper" step="0.1" value="8.5">
+              </div>
+
+              <div class="config-group">
+                <label for="config-ph-lower">pH Lower Limit Threshold</label>
+                <input type="number" id="config-ph-lower" step="0.1" value="6.5">
+              </div>
+
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+              <button type="submit" class="modal-btn" style="border-radius: 8px;">Save Settings</button>
+              <button type="button" class="btn-action" style="padding: 10px 20px; flex-direction: row; border-radius: 8px;" onclick="resetDefaultSettings()">Reset Defaults</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Info Modal -->
+  <div class="modal-overlay" id="info-modal">
+    <div class="modal-content">
+      <div class="modal-header" id="modal-title">Feature Info</div>
+      <div class="modal-body" id="modal-body-text">Details about this control panel feature go here.</div>
+      <button class="modal-btn" onclick="hideModal()">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Simulated Functionality and Interactive JS Script -->
+  <script>
+    // ==========================================================================
+    // 1. DATA INITIALIZATION & SIMULATION VARIABLES
+    // ==========================================================================
+    
+    // Chennai Stagnant Lake Coordinates and outlines
+    const lakePresets = {
+      velachery: {
+        center: [12.9806, 80.2198],
+        zoom: 16,
+        outline: [
+          [12.9835, 80.2175], [12.9840, 80.2215], [12.9818, 80.2235],
+          [12.9785, 80.2225], [12.9772, 80.2195], [12.9788, 80.2165],
+          [12.9815, 80.2160]
+        ],
+        rovers: {
+          1: { coords: [12.9815, 80.2185], pathIndex: 0, path: [[12.9815, 80.2185], [12.9825, 80.2198], [12.9820, 80.2212], [12.9805, 80.2218], [12.9792, 80.2210], [12.9790, 80.2185]] },
+          2: { coords: [12.9795, 80.2205], pathIndex: 0, path: [[12.9795, 80.2205], [12.9805, 80.2215], [12.9800, 80.2222], [12.9788, 80.2210]] },
+          3: { coords: [12.9822, 80.2170], pathIndex: 0, path: [[12.9822, 80.2170], [12.9828, 80.2190], [12.9815, 80.2195], [12.9808, 80.2180]] }
+        },
+        hotZones: [
+          { center: [12.9795, 80.2210], radius: 65, type: "algae", color: "#f59e0b", desc: "Velachery Algae Canopy (High Eutrophication)" },
+          { center: [12.9818, 80.2192], radius: 45, type: "chemical", color: "#ef4444", desc: "Chemical Contamination Plume (Runoff Outlet)" }
+        ]
+      },
+      retteri: {
+        center: [13.1412, 80.2078],
+        zoom: 16,
+        outline: [
+          [13.1465, 80.2052], [13.1450, 80.2120], [13.1390, 80.2115],
+          [13.1365, 80.2065], [13.1402, 80.2035]
+        ],
+        rovers: {
+          1: { coords: [13.1425, 80.2065], pathIndex: 0, path: [[13.1425, 80.2065], [13.1438, 80.2095], [13.1415, 80.2105], [13.1398, 80.2078]] },
+          2: { coords: [13.1395, 80.2085], pathIndex: 0, path: [[13.1395, 80.2085], [13.1408, 80.2102], [13.1382, 80.2098]] },
+          3: { coords: [13.1445, 80.2060], pathIndex: 0, path: [[13.1445, 80.2060], [13.1448, 80.2090], [13.1425, 80.2085]] }
+        },
+        hotZones: [
+          { center: [13.1428, 80.2095], radius: 75, type: "algae", color: "#f59e0b", desc: "Retteri East Algae Bloom" },
+          { center: [13.1405, 80.2068], radius: 50, type: "chemical", color: "#ef4444", desc: "Retteri Industrial Effluent Plume" }
+        ]
+      },
+      porur: {
+        center: [13.0298, 80.1472],
+        zoom: 16,
+        outline: [
+          [13.0335, 80.1425], [13.0332, 80.1515], [13.0280, 80.1520],
+          [13.0255, 80.1455], [13.0278, 80.1418]
+        ],
+        rovers: {
+          1: { coords: [13.0305, 80.1450], pathIndex: 0, path: [[13.0305, 80.1450], [13.0318, 80.1488], [13.0292, 80.1495], [13.0275, 80.1462]] },
+          2: { coords: [13.0282, 80.1470], pathIndex: 0, path: [[13.0282, 80.1470], [13.0295, 80.1490], [13.0272, 80.1485]] },
+          3: { coords: [13.0322, 80.1440], pathIndex: 0, path: [[13.0322, 80.1440], [13.0325, 80.1485], [13.0302, 80.1472]] }
+        },
+        hotZones: [
+          { center: [13.0310, 80.1490], radius: 70, type: "algae", color: "#f59e0b", desc: "Porur Hyacinth & Algal Canopy" },
+          { center: [13.0285, 80.1450], radius: 40, type: "chemical", color: "#ef4444", desc: "Porur Inflow Stagnation Plume" }
+        ]
+      }
+    };
+
+    let activePreset = 'velachery';
+
+    // Settings calibrated variables (loaded from localStorage or defaults)
+    let config = {
+      kp: parseFloat(localStorage.getItem('ecofloat_kp')) || 0.8,
+      baseSpeed: parseInt(localStorage.getItem('ecofloat_base_speed')) || 50,
+      confidence: parseInt(localStorage.getItem('ecofloat_confidence')) || 75,
+      doLimit: parseFloat(localStorage.getItem('ecofloat_do_limit')) || 4.5,
+      phUpper: parseFloat(localStorage.getItem('ecofloat_ph_upper')) || 8.5,
+      phLower: parseFloat(localStorage.getItem('ecofloat_ph_lower')) || 6.5
+    };
+
+    // Load initial settings indicators in configuration tab
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('config-kp').value = config.kp;
+      document.getElementById('indicator-kp').innerText = config.kp;
+      document.getElementById('config-base-speed').value = config.baseSpeed;
+      document.getElementById('indicator-base-speed').innerText = config.baseSpeed;
+      document.getElementById('config-confidence').value = config.confidence;
+      document.getElementById('indicator-confidence').innerText = config.confidence + '%';
+      document.getElementById('config-do-limit').value = config.doLimit;
+      document.getElementById('config-ph-upper').value = config.phUpper;
+      document.getElementById('config-ph-lower').value = config.phLower;
+    });
+
+    // Swarm configuration (initialized to Velachery, Chennai)
+    const swarm = {
+      1: {
+        id: "EcoFloat-1",
+        coords: [...lakePresets.velachery.rovers[1].coords],
+        heading: 45,
+        battery: 89,
+        netCapacity: 42,
+        mode: "AUTO", // AUTO, MANUAL, RETREAT
+        activity: "Sweeping Lake Center",
+        color: "#0ea5e9",
+        pathIndex: 0,
+        ph: 7.4,
+        do: 6.2,
+        turbidity: 12,
+        marker: null,
+        waypointLine: null,
+        waypointMarker: null,
+        targetWaypoint: null,
+        path: [...lakePresets.velachery.rovers[1].path],
+        // Full map elements
+        markerFull: null,
+        waypointLineFull: null,
+        waypointMarkerFull: null
+      },
+      2: {
+        id: "EcoFloat-2",
+        coords: [...lakePresets.velachery.rovers[2].coords],
+        heading: 120,
+        battery: 86,
+        netCapacity: 61,
+        mode: "AUTO",
+        activity: "Analyzing Algae Plume",
+        color: "#0d9488",
+        pathIndex: 0,
+        ph: 8.1,
+        do: 5.1,
+        turbidity: 24,
+        marker: null,
+        waypointLine: null,
+        waypointMarker: null,
+        targetWaypoint: null,
+        path: [...lakePresets.velachery.rovers[2].path],
+        markerFull: null,
+        waypointLineFull: null,
+        waypointMarkerFull: null
+      },
+      3: {
+        id: "EcoFloat-3",
+        coords: [...lakePresets.velachery.rovers[3].coords],
+        heading: 270,
+        battery: 90,
+        netCapacity: 27,
+        mode: "AUTO",
+        activity: "Waypoint Navigation",
+        color: "#6366f1",
+        pathIndex: 0,
+        ph: 7.2,
+        do: 6.8,
+        turbidity: 9,
+        marker: null,
+        waypointLine: null,
+        waypointMarker: null,
+        targetWaypoint: null,
+        path: [...lakePresets.velachery.rovers[3].path],
+        markerFull: null,
+        waypointLineFull: null,
+        waypointMarkerFull: null
+      }
+    };
+
+    let activeRoverId = 1;
+    
+    // Initial values set to 4.3 kg (plastics) and 5.7 kg (algae) as requested!
+    let totalPlasticsCollected = 4.3;
+    let totalAlgaeHarvested = 5.7;
+
+    // Environmental Hot Zones on map (Plumes & Blooms)
+    let hotZones = JSON.parse(JSON.stringify(lakePresets.velachery.hotZones));
+
+    // ==========================================================================
+    // 2. LEAFLET MAP INITIALIZATION & STYLING (ESRI SATELLITE TILES)
+    // ==========================================================================
+    let map, fullMap;
+    let mapLakePolygon, fullMapLakePolygon;
+    let mapHotZones = [], fullMapHotZones = [];
+
+    function initMap() {
+      // 1. Overview Map
+      map = L.map('lake-map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
+
+      // Use ESRI Satellite Tiles to focus on actual lake waterbody
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+      }).addTo(map);
+
+      // 2. Full-Screen Control Map
+      fullMap = L.map('full-lake-map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+      }).addTo(fullMap);
+
+      renderLakeAssets();
+
+      // Click event for custom waypoints on both maps
+      map.on('click', function(e) {
+        setTargetWaypoint(e.latlng.lat, e.latlng.lng);
+      });
+      fullMap.on('click', function(e) {
+        setTargetWaypoint(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    // Render outline and hotzones
+    function renderLakeAssets() {
+      const preset = lakePresets[activePreset];
+
+      // Remove previous map layers if exist
+      if (mapLakePolygon) map.removeLayer(mapLakePolygon);
+      if (fullMapLakePolygon) fullMap.removeLayer(fullMapLakePolygon);
+      
+      mapHotZones.forEach(z => map.removeLayer(z));
+      fullMapHotZones.forEach(z => fullMap.removeLayer(z));
+      mapHotZones = [];
+      fullMapHotZones = [];
+
+      // Highlight the lake polygon boundary on top of the satellite tiles
+      mapLakePolygon = L.polygon(preset.outline, {
+        color: '#0ea5e9',
+        fillColor: '#0ea5e9',
+        fillOpacity: 0.18,
+        weight: 2.5
+      }).addTo(map);
+
+      fullMapLakePolygon = L.polygon(preset.outline, {
+        color: '#0ea5e9',
+        fillColor: '#0ea5e9',
+        fillOpacity: 0.18,
+        weight: 2.5
+      }).addTo(fullMap);
+
+      // Render hotzones
+      hotZones.forEach((zone, idx) => {
+        const c1 = L.circle(zone.center, {
+          color: zone.color,
+          fillColor: zone.color,
+          fillOpacity: 0.22,
+          weight: 2,
+          dashArray: '4, 4'
+        }).addTo(map).bindPopup(`<strong>${zone.desc}</strong>`);
+        mapHotZones.push(c1);
+
+        const c2 = L.circle(zone.center, {
+          color: zone.color,
+          fillColor: zone.color,
+          fillOpacity: 0.22,
+          weight: 2,
+          dashArray: '4, 4'
+        }).addTo(fullMap).bindPopup(`<strong>${zone.desc}</strong>`);
+        fullMapHotZones.push(c2);
+        
+        // Link reference
+        zone.circleEl = c1;
+        zone.circleElFull = c2;
+      });
+
+      // Render active rovers markers
+      Object.keys(swarm).forEach((id) => {
+        const rover = swarm[id];
+
+        // Clear existing markers
+        if (rover.marker) map.removeLayer(rover.marker);
+        if (rover.markerFull) fullMap.removeLayer(rover.markerFull);
+
+        const htmlIcon = `<div class="boat-icon-container" id="boat-icon-container-${id}">
+                   <div class="boat-icon-circle ${id == activeRoverId ? 'active-rover' : ''}" style="border-color: ${rover.color}; background-color: rgba(10, 10, 15, 0.85);">
+                     <div class="boat-heading-arrow" style="border-bottom-color: ${rover.color}; transform: rotate(${rover.heading}deg);"></div>
+                     ${id}
+                   </div>
+                 </div>`;
+
+        const roverIcon = L.divIcon({
+          className: 'boat-icon-wrapper',
+          html: htmlIcon,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const roverIconFull = L.divIcon({
+          className: 'boat-icon-wrapper',
+          html: htmlIcon,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        rover.marker = L.marker(rover.coords, { icon: roverIcon }).addTo(map)
+          .bindPopup(`<strong>${rover.id}</strong><br>Activity: ${rover.activity}<br>Battery: ${rover.battery.toFixed(0)}%`);
+
+        rover.markerFull = L.marker(rover.coords, { icon: roverIconFull }).addTo(fullMap)
+          .bindPopup(`<strong>${rover.id}</strong><br>Activity: ${rover.activity}<br>Battery: ${rover.battery.toFixed(0)}%`);
+      });
+    }
+
+    // Presets changing
+    function changeLakePreset(val) {
+      activePreset = val;
+      const preset = lakePresets[val];
+
+      // Update center
+      map.setView(preset.center, preset.zoom);
+      fullMap.setView(preset.center, preset.zoom);
+
+      // Re-coordinate rovers
+      Object.keys(swarm).forEach(id => {
+        const r = swarm[id];
+        r.coords = [...preset.rovers[id].coords];
+        r.path = [...preset.rovers[id].path];
+        r.pathIndex = 0;
+        r.targetWaypoint = null;
+        if (r.waypointMarker) { map.removeLayer(r.waypointMarker); r.waypointMarker = null; }
+        if (r.waypointLine) { map.removeLayer(r.waypointLine); r.waypointLine = null; }
+        if (r.waypointMarkerFull) { fullMap.removeLayer(r.waypointMarkerFull); r.waypointMarkerFull = null; }
+        if (r.waypointLineFull) { fullMap.removeLayer(r.waypointLineFull); r.waypointLineFull = null; }
+      });
+
+      // Reload hotzones
+      hotZones = JSON.parse(JSON.stringify(preset.hotZones));
+
+      renderLakeAssets();
+      appendLog('sys', `Preset changed to ${val.toUpperCase()} LAKE (Chennai). Telemetry paths relocated.`);
+    }
+
+    function clearAllWaypoints() {
+      Object.keys(swarm).forEach(id => {
+        const r = swarm[id];
+        r.targetWaypoint = null;
+        if (r.waypointMarker) { map.removeLayer(r.waypointMarker); r.waypointMarker = null; }
+        if (r.waypointLine) { map.removeLayer(r.waypointLine); r.waypointLine = null; }
+        if (r.waypointMarkerFull) { fullMap.removeLayer(r.waypointMarkerFull); r.waypointMarkerFull = null; }
+        if (r.waypointLineFull) { fullMap.removeLayer(r.waypointLineFull); r.waypointLineFull = null; }
+      });
+      appendLog('nav', 'All waypoints cleared across swarm.');
+    }
+
+    // ==========================================================================
+    // 3. CHART.JS REAL-TIME TELEMETRY GRAPH
+    // ==========================================================================
+    let telemetryChart;
+    const chartLabels = Array.from({length: 15}, (_, i) => `${30 - i * 2}s ago`).reverse();
+    const mockHistory = {
+      ph: Array.from({length: 15}, () => 7.4 + (Math.random() - 0.5) * 0.2),
+      do: Array.from({length: 15}, () => 6.2 + (Math.random() - 0.5) * 0.3),
+      turbidity: Array.from({length: 15}, () => 12 + Math.floor((Math.random() - 0.5) * 4))
+    };
+
+    function initChart() {
+      const ctx = document.getElementById('liveTelemetryChart').getContext('2d');
+      telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: 'pH Level',
+              data: mockHistory.ph,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              borderWidth: 2,
+              pointRadius: 1,
+              tension: 0.3,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Dissolved Oxygen (mg/L)',
+              data: mockHistory.do,
+              borderColor: '#0ea5e9',
+              backgroundColor: 'rgba(14, 165, 233, 0.05)',
+              borderWidth: 2,
+              pointRadius: 1,
+              tension: 0.3,
+              yAxisID: 'y1'
+            },
+            {
+              label: 'Turbidity (NTU)',
+              data: mockHistory.turbidity,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 17, 0.05)',
+              borderWidth: 2,
+              pointRadius: 1,
+              tension: 0.3,
+              yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#9ca3af',
+                font: { family: 'Outfit', size: 10 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.02)' },
+              ticks: { color: '#6b7280', font: { family: 'Outfit', size: 9 } }
+            },
+            y: {
+              position: 'left',
+              title: { display: true, text: 'pH', color: '#10b981', font: { family: 'Outfit', size: 10 } },
+              grid: { color: 'rgba(255, 255, 255, 0.03)' },
+              ticks: { color: '#9ca3af', font: { family: 'Fira Code', size: 9 } },
+              min: 5,
+              max: 10
+            },
+            y1: {
+              position: 'right',
+              title: { display: true, text: 'DO (mg/L)', color: '#0ea5e9', font: { family: 'Outfit', size: 10 } },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#9ca3af', font: { family: 'Fira Code', size: 9 } },
+              min: 2,
+              max: 10
+            },
+            y2: {
+              position: 'right',
+              title: { display: true, text: 'Turbidity (NTU)', color: '#f59e0b', font: { family: 'Outfit', size: 10 } },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#9ca3af', font: { family: 'Fira Code', size: 9 } },
+              min: 0,
+              max: 50
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================================================
+    // 4. LIVE SIMULATION LOOP & TELEMETRY UPDATER
+    // ==========================================================================
+    let isEmergencyStopped = false;
+
+    function updateSimulation() {
+      if (isEmergencyStopped) return;
+
+      let sumWqi = 0;
+      let totalActiveBattery = 0;
+
+      // 1. Move rovers along their path or target waypoint
+      Object.keys(swarm).forEach((id) => {
+        const rover = swarm[id];
+        
+        // Skip updating if manual mode and diagnostic
+        if (rover.mode === "MANUAL" && id == activeRoverId) {
+          rover.activity = "Manual Control Mode Active";
+          
+          // Speed PWM in manual defaults
+          rover.port_pwm = config.baseSpeed;
+          rover.starboard_pwm = config.baseSpeed;
+          rover.steering_error = 0;
+        } else {
+          // Calculate heading and move towards target waypoint or path waypoint
+          let target = rover.targetWaypoint;
+          if (!target) {
+            target = rover.path[rover.pathIndex];
+          }
+
+          const currentPos = rover.coords;
+          const latDiff = target[0] - currentPos[0];
+          const lngDiff = target[1] - currentPos[1];
+          const dist = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+          // Calculate Steering Error delta_e = X_c - 320
+          let steeringError = 0;
+          if (dist > 0.0001) {
+            steeringError = Math.floor((Math.random() - 0.5) * 60);
+          }
+          rover.steering_error = steeringError;
+
+          // Proportional motor speeds
+          rover.port_pwm = Math.max(0, Math.min(255, Math.round(config.baseSpeed + config.kp * steeringError)));
+          rover.starboard_pwm = Math.max(0, Math.min(255, Math.round(config.baseSpeed - config.kp * steeringError)));
+
+          if (dist < 0.00015) {
+            // Reached waypoint
+            if (rover.targetWaypoint) {
+              rover.targetWaypoint = null;
+              if (rover.waypointMarker) { map.removeLayer(rover.waypointMarker); rover.waypointMarker = null; }
+              if (rover.waypointLine) { map.removeLayer(rover.waypointLine); rover.waypointLine = null; }
+              if (rover.waypointMarkerFull) { fullMap.removeLayer(rover.waypointMarkerFull); rover.waypointMarkerFull = null; }
+              if (rover.waypointLineFull) { fullMap.removeLayer(rover.waypointLineFull); rover.waypointLineFull = null; }
+              appendLog('nav', `Rover ${rover.id} reached manual target waypoint.`);
+            } else {
+              // Next path index
+              rover.pathIndex = (rover.pathIndex + 1) % rover.path.length;
+            }
+            rover.port_pwm = 0;
+            rover.starboard_pwm = 0;
+          } else {
+            // Interpolate step
+            const stepSize = 0.000025 + (config.baseSpeed / 100) * 0.00004; 
+            const dLat = (latDiff / dist) * stepSize;
+            const dLng = (lngDiff / dist) * stepSize;
+            rover.coords = [currentPos[0] + dLat, currentPos[1] + dLng];
+
+            let angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+            if (angle < 0) angle += 360;
+            rover.heading = angle;
+          }
+        }
+
+        // 2. Dynamic sensors fluctuations based on hot zones
+        let basePh = 7.4 + (Math.random() - 0.5) * 0.1;
+        let baseDo = 6.4 + (Math.random() - 0.5) * 0.15;
+        let baseTurbidity = 10 + Math.floor(Math.random() * 3);
+
+        // Check if inside any hot zone
+        let statusAlert = false;
+        hotZones.forEach((zone) => {
+          const zDiffLat = zone.center[0] - rover.coords[0];
+          const zDiffLng = zone.center[1] - rover.coords[1];
+          const zoneDist = Math.sqrt(zDiffLat * zDiffLat + zDiffLng * zDiffLng) * 111000;
+
+          if (zoneDist <= zone.radius) {
+            statusAlert = true;
+            if (zone.type === "algae") {
+              basePh = 8.2 + (Math.random() - 0.5) * 0.15;
+              baseDo = 4.8 + (Math.random() - 0.5) * 0.2;
+              baseTurbidity = 26 + Math.floor(Math.random() * 5);
+              rover.netCapacity = Math.min(100, rover.netCapacity + 0.35); // Net fills up fast
+              rover.activity = "TARGET_LOCKED";
+              
+              if (Math.random() < 0.04) {
+                appendLog('alert', `Rover ${rover.id} [TARGET_LOCKED]: Dense algal canopy detected, MobileNetV2 confidence 88%.`);
+              }
+            } else if (zone.type === "chemical") {
+              basePh = 6.1 + (Math.random() - 0.5) * 0.2;
+              baseDo = 3.6 + (Math.random() - 0.5) * 0.2;
+              baseTurbidity = 34 + Math.floor(Math.random() * 6);
+              rover.activity = "ACTIVE_INTERCEPTION";
+              
+              if (rover.mode === "RETREAT") {
+                rover.activity = "DEBRIS_CAPTURE";
+                // Reduce plume radius slightly representing active remediation
+                zone.radius = Math.max(5, zone.radius - 0.5);
+                if (zone.circleEl) zone.circleEl.setRadius(zone.radius);
+                if (zone.circleElFull) zone.circleElFull.setRadius(zone.radius);
+                
+                if (Math.random() < 0.05) {
+                  appendLog('act', `Rover ${rover.id}: Active Plume Retreatment. Plume size reduced.`);
+                }
+              }
+
+              if (Math.random() < 0.03) {
+                appendLog('alert', `Rover ${rover.id} [ALERT]: Low DO threshold (${baseDo.toFixed(2)} mg/L) crossed in chemical hot zone.`);
+              }
+            }
+          }
+        });
+
+        if (!statusAlert) {
+          rover.activity = rover.targetWaypoint ? "ACTIVE_INTERCEPTION" : "EXPLORATORY_SEARCH";
+          rover.netCapacity = Math.min(100, rover.netCapacity + 0.06); 
+        }
+
+        rover.ph = basePh;
+        rover.do = baseDo;
+        rover.turbidity = baseTurbidity;
+
+        // 3. Solar battery simulation
+        if (rover.battery < 100) {
+          rover.battery = Math.min(100, rover.battery + 0.02);
+        }
+
+        // 4. Update Map Marker positions
+        if (rover.marker) {
+          rover.marker.setLatLng(rover.coords);
+          const container = document.getElementById(`boat-icon-container-${id}`);
+          if (container) {
+            const arrow = container.querySelector('.boat-heading-arrow');
+            if (arrow) arrow.style.transform = `rotate(${Math.floor(rover.heading)}deg)`;
+          }
+        }
+        if (rover.markerFull) {
+          rover.markerFull.setLatLng(rover.coords);
+        }
+
+        let doScore = Math.max(0, 100 - Math.abs(6.5 - rover.do) * 20);
+        let phScore = Math.max(0, 100 - Math.abs(7.4 - rover.ph) * 30);
+        let turbScore = Math.max(0, 100 - rover.turbidity * 2);
+        sumWqi += (doScore + phScore + turbScore) / 3;
+        totalActiveBattery += rover.battery;
+      });
+
+      // Update cumulative stats (simulated slow trickle collection additions)
+      totalPlasticsCollected += 0.004; 
+      totalAlgaeHarvested += 0.008;
+
+      updateUIDom(sumWqi / 3, totalActiveBattery / 3);
+      tickChartsData();
+    }
+
+    // ==========================================================================
+    // 5. DOM INTERFACES & RENDER FUNCTIONS
+    // ==========================================================================
+    function updateUIDom(avgWqi, avgBattery) {
+      document.getElementById('metric-plastics').innerText = `${totalPlasticsCollected.toFixed(2)} kg`;
+      document.getElementById('metric-algae').innerText = `${totalAlgaeHarvested.toFixed(2)} kg`;
+      document.getElementById('metric-battery').innerText = `${avgBattery.toFixed(0)}%`;
+      document.getElementById('metric-wqi').innerText = avgWqi.toFixed(1);
+
+      const wqiStatus = document.getElementById('metric-wqi-status');
+      if (avgWqi > 80) {
+        wqiStatus.innerText = "Excellent Quality";
+        wqiStatus.style.color = "var(--color-success)";
+      } else if (avgWqi > 65) {
+        wqiStatus.innerText = "Good Condition";
+        wqiStatus.style.color = "var(--color-primary)";
+      } else {
+        wqiStatus.innerText = "Remediation Warn";
+        wqiStatus.style.color = "var(--color-warning)";
+      }
+
+      const activeRover = swarm[activeRoverId];
+
+      // Physical specs calculations for 15.0 kg payload limits
+      const currentDebris = (activeRover.netCapacity / 100) * 15.0;
+      const totalMass = 6.0 + currentDebris;
+      const draftFraction = (totalMass / 28.0) * 100;
+      const batteryVoltage = 10.0 + (activeRover.battery / 100) * 3.3;
+
+      document.getElementById('spec-debris-weight').innerText = `${currentDebris.toFixed(2)} kg`;
+      document.getElementById('spec-displaced-volume').innerText = `${totalMass.toFixed(2)} kg / Liters`;
+      document.getElementById('spec-draft-fraction').innerText = `${draftFraction.toFixed(1)}%`;
+      document.getElementById('spec-battery-voltage').innerText = `${batteryVoltage.toFixed(2)} V`;
+      document.getElementById('spec-port-pwm').innerText = `${activeRover.port_pwm || 0} / 255`;
+      document.getElementById('spec-starboard-pwm').innerText = `${activeRover.starboard_pwm || 0} / 255`;
+      document.getElementById('spec-steering-error').innerText = `${activeRover.steering_error.toFixed(1)} px (${activeRover.steering_error > 0 ? 'Right' : activeRover.steering_error < 0 ? 'Left' : 'Centered'})`;
+      
+      const randConf = (activeRover.activity === "TARGET_LOCKED" || activeRover.activity === "ACTIVE_INTERCEPTION")
+        ? 75 + Math.random() * 20 
+        : 0;
+      document.getElementById('spec-target-confidence').innerText = randConf > 0 ? `${randConf.toFixed(1)}%` : 'No target in frame (0.0%)';
+
+      // Sync details table
+      Object.keys(swarm).forEach((id) => {
+        const rover = swarm[id];
+        const modeBadge = document.getElementById(`row-mode-${id}`);
+        modeBadge.className = `badge-mode ${rover.mode.toLowerCase()}`;
+        modeBadge.innerText = rover.mode === "RETREAT" ? "CHEM" : rover.mode;
+
+        document.getElementById(`row-battery-${id}`).innerText = `${rover.battery.toFixed(0)}%`;
+
+        const loadProgress = document.getElementById(`row-net-${id}`);
+        loadProgress.style.width = `${rover.netCapacity.toFixed(0)}%`;
+        document.getElementById(`row-net-text-${id}`).innerText = `${rover.netCapacity.toFixed(0)}%`;
+        
+        if (rover.netCapacity > 85) {
+          loadProgress.style.backgroundColor = "var(--color-danger)";
+        } else if (rover.netCapacity > 60) {
+          loadProgress.style.backgroundColor = "var(--color-warning)";
+        } else {
+          loadProgress.style.backgroundColor = "var(--color-primary)";
+        }
+
+        document.getElementById(`row-act-${id}`).innerText = rover.activity;
+      });
+
+      for (let i = 1; i <= 3; i++) {
+        const row = document.getElementById(`rover-row-${i}`);
+        if (i == activeRoverId) {
+          row.style.background = 'rgba(14, 165, 233, 0.05)';
+          row.style.borderLeft = '2px solid var(--color-primary)';
+        } else {
+          row.style.background = '';
+          row.style.borderLeft = '';
+        }
+      }
+
+      // Sync Global Alerts indicator
+      const alertState = Object.values(swarm).some(r => r.ph < config.phLower || r.ph > config.phUpper || r.do < config.doLimit);
+      const systemDot = document.getElementById('system-status-dot');
+      const systemText = document.getElementById('system-status-text');
+
+      if (alertState) {
+        systemDot.className = 'status-dot alerting';
+        systemText.innerText = "CHEMICAL PLUME ALARM";
+        systemText.style.color = "var(--color-danger)";
+      } else {
+        systemDot.className = 'status-dot';
+        systemText.innerText = "SWARM ACTIVE - STABLE";
+        systemText.style.color = "var(--color-success)";
+      }
+    }
+
+    function tickChartsData() {
+      if (!telemetryChart) return;
+      const activeRover = swarm[activeRoverId];
+
+      telemetryChart.data.datasets[0].data.shift();
+      telemetryChart.data.datasets[0].data.push(activeRover.ph);
+
+      telemetryChart.data.datasets[1].data.shift();
+      telemetryChart.data.datasets[1].data.push(activeRover.do);
+
+      telemetryChart.data.datasets[2].data.shift();
+      telemetryChart.data.datasets[2].data.push(activeRover.turbidity);
+
+      telemetryChart.update('none');
+    }
+
+    // ==========================================================================
+    // 6. ACTION HANDLERS & MOCK CONTROL FUNCTIONS
+    // ==========================================================================
+    function switchPanel(panelId) {
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(el => el.classList.remove('active'));
+      document.getElementById(`nav-${panelId}`).classList.add('active');
+
+      const panels = document.querySelectorAll('.view-panel');
+      panels.forEach(el => el.classList.remove('active-panel'));
+      document.getElementById(`panel-${panelId}`).classList.add('active-panel');
+
+      setTimeout(() => {
+        if (panelId === 'overview') map.invalidateSize();
+        if (panelId === 'map') fullMap.invalidateSize();
+      }, 100);
+    }
+
+    function changeActiveTarget(id) {
+      activeRoverId = parseInt(id);
+      document.getElementById('chart-rover-badge').innerText = `EcoFloat-${id}`;
+      document.getElementById('chart-rover-badge').style.color = swarm[id].color;
+      document.getElementById('chart-rover-badge').style.background = `${swarm[id].color}12`;
+
+      Object.keys(swarm).forEach((key) => {
+        const el = document.getElementById(`boat-icon-container-${key}`);
+        if (el) {
+          const circle = el.querySelector('.boat-icon-circle');
+          if (key == activeRoverId) circle.classList.add('active-rover');
+          else circle.classList.remove('active-rover');
+        }
+      });
+
+      const rover = swarm[activeRoverId];
+      const manualBtn = document.getElementById('btn-manual-override');
+      const chemBtn = document.getElementById('btn-deploy-chemical');
+
+      if (rover.mode === "MANUAL") {
+        manualBtn.classList.add('active-action');
+        document.getElementById('manual-mode-btn-text').innerText = "Autonomous Switch";
+        document.getElementById('manual-mode-icon').innerText = "smart_toy";
+      } else {
+        manualBtn.classList.remove('active-action');
+        document.getElementById('manual-mode-btn-text').innerText = "Manual Override";
+        document.getElementById('manual-mode-icon').innerText = "sports_esports";
+      }
+
+      if (rover.mode === "RETREAT") chemBtn.classList.add('active-action');
+      else chemBtn.classList.remove('active-action');
+
+      appendLog('sys', `Swarm console focus switched to Active Target: ${rover.id}`);
+      updateUIDom(74, 88);
+    }
+
+    function selectRoverFromRow(id) {
+      document.getElementById('command-rover-select').value = id;
+      changeActiveTarget(id);
+    }
+
+    function toggleManualMode() {
+      const rover = swarm[activeRoverId];
+      const manualBtn = document.getElementById('btn-manual-override');
+
+      if (rover.mode !== "MANUAL") {
+        rover.mode = "MANUAL";
+        manualBtn.classList.add('active-action');
+        document.getElementById('manual-mode-btn-text').innerText = "Autonomous Switch";
+        document.getElementById('manual-mode-icon').innerText = "smart_toy";
+        appendLog('act', `MANUAL CONTROL override engaged for ${rover.id}. Click anywhere on map to route.`);
+      } else {
+        rover.mode = "AUTO";
+        manualBtn.classList.remove('active-action');
+        document.getElementById('manual-mode-btn-text').innerText = "Manual Override";
+        document.getElementById('manual-mode-icon').innerText = "sports_esports";
+        appendLog('act', `Autonomy control restored. ${rover.id} resuming sweep pattern.`);
+      }
+    }
+
+    function deployChemicalNeutralizer() {
+      const rover = swarm[activeRoverId];
+      const chemBtn = document.getElementById('btn-deploy-chemical');
+
+      if (rover.mode !== "RETREAT") {
+        rover.mode = "RETREAT";
+        chemBtn.classList.add('active-action');
+        appendLog('sys', `CHEMICAL RETREATMENT profile deployed to ${rover.id}.`);
+        appendLog('act', `${rover.id}: Releasing micro-buffered neutralizing compound (dispersing via BTS7960 pumps).`);
+      } else {
+        rover.mode = "AUTO";
+        chemBtn.classList.remove('active-action');
+        appendLog('sys', `${rover.id} chemical dispenser closed. Resuming autonomous search.`);
+      }
+    }
+
+    function emptyNets() {
+      const rover = swarm[activeRoverId];
+      if (rover.netCapacity < 10) {
+        appendLog('sys', `${rover.id} collection net is already empty.`);
+        return;
+      }
+
+      const collectedLoad = rover.netCapacity;
+      const plasticPortion = collectedLoad * 0.35 * 0.15;
+      const algaePortion = collectedLoad * 0.65 * 0.15;
+
+      totalPlasticsCollected += plasticPortion;
+      totalAlgaeHarvested += algaePortion;
+
+      rover.netCapacity = 0;
+      appendLog('act', `${rover.id} HDPE mesh nets emptied. Removed: ${(plasticPortion + algaePortion).toFixed(2)} kg payload. Resuming sweep.`);
+    }
+
+    function setTargetWaypoint(lat, lng) {
+      const rover = swarm[activeRoverId];
+      
+      if (rover.waypointMarker) map.removeLayer(rover.waypointMarker);
+      if (rover.waypointLine) map.removeLayer(rover.waypointLine);
+      if (rover.waypointMarkerFull) fullMap.removeLayer(rover.waypointMarkerFull);
+      if (rover.waypointLineFull) fullMap.removeLayer(rover.waypointLineFull);
+
+      const flagIcon = L.divIcon({
+        className: 'flag-icon-wrapper',
+        html: '<span class="material-symbols-outlined waypoint-flag-icon">flag_circle</span>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 24]
+      });
+
+      const flagIconFull = L.divIcon({
+        className: 'flag-icon-wrapper',
+        html: '<span class="material-symbols-outlined waypoint-flag-icon">flag_circle</span>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 24]
+      });
+
+      rover.targetWaypoint = [lat, lng];
+
+      rover.waypointMarker = L.marker([lat, lng], { icon: flagIcon }).addTo(map);
+      rover.waypointMarkerFull = L.marker([lat, lng], { icon: flagIconFull }).addTo(fullMap);
+
+      rover.waypointLine = L.polyline([rover.coords, rover.targetWaypoint], {
+        color: rover.color,
+        weight: 1.5,
+        dashArray: '4, 4',
+        opacity: 0.8
+      }).addTo(map);
+
+      rover.waypointLineFull = L.polyline([rover.coords, rover.targetWaypoint], {
+        color: rover.color,
+        weight: 1.5,
+        dashArray: '4, 4',
+        opacity: 0.8
+      }).addTo(fullMap);
+
+      appendLog('nav', `${rover.id} target updated. Waypoint path calculated to [${lat.toFixed(5)}, ${lng.toFixed(5)}].`);
+    }
+
+    function runDiagnostics() {
+      const rover = swarm[activeRoverId];
+      appendLog('sys', `BIST (Built-in Self Test) Diagnostics started for ${rover.id}...`);
+      setTimeout(() => appendLog('sens', `  [OK] Electrochemical telemetry probes validated.`), 500);
+      setTimeout(() => appendLog('nav', `  [OK] Kp steering proportional loops locked at Kp=${config.kp}.`), 1000);
+      setTimeout(() => appendLog('act', `  [OK] Dual DC thrusters active. Designed net capacity 15.0 kg validated.`), 1500);
+      setTimeout(() => appendLog('sys', `BIST DIAGNOSTIC COMPLETE: ${rover.id} systems operational.`), 2000);
+    }
+
+    function returnToBase() {
+      const baseStation = lakePresets[activePreset].center;
+      appendLog('nav', `RECALL ORDERED. Recalculating path returning to base dock...`);
+      setTargetWaypoint(baseStation[0], baseStation[1]);
+    }
+
+    function emergencyStop() {
+      isEmergencyStopped = !isEmergencyStopped;
+      const systemDot = document.getElementById('system-status-dot');
+      const systemText = document.getElementById('system-status-text');
+
+      if (isEmergencyStopped) {
+        systemDot.className = 'status-dot alerting';
+        systemText.innerText = "EMERGENCY HALT ACTIVE";
+        systemText.style.color = "var(--color-danger)";
+        appendLog('alert', '!!! EMERGENCY STOP ACTIVATED !!! Swarm motors disengaged, differential navigation halted.');
+        Object.keys(swarm).forEach(id => {
+          swarm[id].port_pwm = 0;
+          swarm[id].starboard_pwm = 0;
+        });
+      } else {
+        appendLog('sys', 'Emergency state cleared. Restoring swarm propulsion.');
+      }
+    }
+
+    // Config form handlers
+    function saveConfiguration(event) {
+      event.preventDefault();
+      
+      config.kp = parseFloat(document.getElementById('config-kp').value);
+      config.baseSpeed = parseInt(document.getElementById('config-base-speed').value);
+      config.confidence = parseInt(document.getElementById('config-confidence').value);
+      config.doLimit = parseFloat(document.getElementById('config-do-limit').value);
+      config.phUpper = parseFloat(document.getElementById('config-ph-upper').value);
+      config.phLower = parseFloat(document.getElementById('config-ph-lower').value);
+
+      localStorage.setItem('ecofloat_kp', config.kp);
+      localStorage.setItem('ecofloat_base_speed', config.baseSpeed);
+      localStorage.setItem('ecofloat_confidence', config.confidence);
+      localStorage.setItem('ecofloat_do_limit', config.doLimit);
+      localStorage.setItem('ecofloat_ph_upper', config.phUpper);
+      localStorage.setItem('ecofloat_ph_lower', config.phLower);
+
+      appendLog('sys', `SETTINGS PUSH: Kp=${config.kp}, Base PWM=${config.baseSpeed}, TF Threshold=${config.confidence}%, DO Limit=${config.doLimit} mg/L.`);
+      showModal('Configuration Saved', 'System settings updated successfully. Configurations have been pushed to local telemetry profiles.');
+    }
+
+    function resetDefaultSettings() {
+      localStorage.removeItem('ecofloat_kp');
+      localStorage.removeItem('ecofloat_base_speed');
+      localStorage.removeItem('ecofloat_confidence');
+      localStorage.removeItem('ecofloat_do_limit');
+      localStorage.removeItem('ecofloat_ph_upper');
+      localStorage.removeItem('ecofloat_ph_lower');
+
+      config = { kp: 0.8, baseSpeed: 50, confidence: 75, doLimit: 4.5, phUpper: 8.5, phLower: 6.5 };
+
+      document.getElementById('config-kp').value = config.kp;
+      document.getElementById('indicator-kp').innerText = config.kp;
+      document.getElementById('config-base-speed').value = config.baseSpeed;
+      document.getElementById('indicator-base-speed').innerText = config.baseSpeed;
+      document.getElementById('config-confidence').value = config.confidence;
+      document.getElementById('indicator-confidence').innerText = config.confidence + '%';
+      document.getElementById('config-do-limit').value = config.doLimit;
+      document.getElementById('config-ph-upper').value = config.phUpper;
+      document.getElementById('config-ph-lower').value = config.phLower;
+
+      appendLog('sys', 'Configuration profiles reset to hardware calibration defaults.');
+    }
+
+    function exportTelemetryCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Timestamp,Vessel,pH,DO(mg/L),Turbidity(NTU),Load(%),Activity\r\n";
+      
+      Object.keys(swarm).forEach(id => {
+        const r = swarm[id];
+        const now = new Date().toISOString();
+        csvContent += `${now},${r.id},${r.ph.toFixed(2)},${r.do.toFixed(2)},${r.turbidity},${r.netCapacity.toFixed(0)},${r.activity}\r\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `ecofloat_swarm_report_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      appendLog('sys', 'Historical telemetry CSV compiled and downloaded.');
+    }
+
+    // ==========================================================================
+    // 7. DIAGNOSTIC LOGS & CONSOLE WRAPPERS
+    // ==========================================================================
+    function appendLog(type, message) {
+      const consoleOutput = document.getElementById('console-output');
+      if (!consoleOutput) return;
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      const logLine = document.createElement('div');
+      logLine.className = 'log-line';
+      
+      let typeLabel = "SYS";
+      if (type === "nav") typeLabel = "NAV";
+      if (type === "sens") typeLabel = "SENS";
+      if (type === "act") typeLabel = "ACT";
+      if (type === "alert") typeLabel = "ALERT";
+
+      logLine.innerHTML = `<span class="log-time">[${timeStr}]</span>
+                           <span class="log-tag ${type}">[${typeLabel}]</span>
+                           <span class="log-message">${message}</span>`;
+      
+      consoleOutput.appendChild(logLine);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+    function clearLogs() {
+      document.getElementById('console-output').innerHTML = '';
+      appendLog('sys', 'System event log cleared.');
+    }
+
+    // ==========================================================================
+    // 8. INTERACTIVE MODAL INTERACTION
+    // ==========================================================================
+    function showModal(title, text) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-body-text').innerText = text;
+      document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function hideModal() {
+      document.getElementById('info-modal').style.display = 'none';
+    }
+
+    // ==========================================================================
+    // 9. SYSTEM TIMERS & CLOCK
+    // ==========================================================================
+    function updateClock() {
+      const now = new Date();
+      const clockEl = document.getElementById('live-clock');
+      if (clockEl) {
+        clockEl.innerText = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      }
+    }
+
+    // ==========================================================================
+    // 10. BOOTSTRAP INITIALIZATION
+    // ==========================================================================
+    window.onload = function() {
+      initMap();
+      initChart();
+      
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      setInterval(updateSimulation, 1500);
+
+      appendLog('sys', 'EcoFloat Smart City Swarm initialized (Chennai sector).');
+      appendLog('nav', 'ROS node active: Swarm waypoints mapped for Velachery Lake.');
+      appendLog('sens', 'All sensor probes active. Recurrent hyperspectral radiometry satellite locks verified.');
+      appendLog('sys', 'Primary base dock link established. Swarm mode set to AUTONOMOUS.');
+    };
+  </script>
+</body>
+</html>
