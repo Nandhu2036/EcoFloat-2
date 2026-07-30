@@ -947,7 +947,7 @@
     <header class="dashboard-header">
       <div class="header-info">
         <h1>ECO-FLOAT // SMART CITY SWARM CONTROLLER</h1>
-        <p>Telemetry, Solid Waste Collection & Water Quality Remediation Platform</p>
+        <p>Telemetry, Solid Waste Collection & Water Quality Remediation Platform (Velachery Lake, Chennai)</p>
       </div>
       <div class="header-status">
         <div class="status-badge">
@@ -1237,11 +1237,11 @@
               </div>
               <div class="panel-controls">
                 <!-- Select lake preset -->
-                <label style="font-size: 12px; color: var(--text-secondary); font-family: var(--font-header);">Lake Preset:</label>
+                <label style="font-size: 12px; color: var(--text-secondary); font-family: var(--font-header);">Select Chennai Water Body:</label>
                 <select class="rover-select-dropdown" id="lake-preset-select" onchange="changeLakePreset(this.value)">
-                  <option value="ulsoor">Ulsoor Lake, Bangalore</option>
-                  <option value="sankey">Sankey Tank, Bangalore</option>
-                  <option value="yediyur">Yediyur Lake, Bangalore</option>
+                  <option value="velachery">Velachery Lake, Chennai</option>
+                  <option value="retteri">Retteri Lake, Chennai</option>
+                  <option value="porur">Porur Lake, Chennai</option>
                 </select>
                 
                 <button class="btn-action" style="padding: 6px 12px; flex-direction: row; gap: 4px;" onclick="clearAllWaypoints()">
@@ -1285,23 +1285,23 @@
               </div>
               <div class="spec-row">
                 <span>Designed Payload Limit</span>
-                <span>4.0 kg</span>
+                <span>15.0 kg</span>
               </div>
               <div class="spec-row">
                 <span>Current Debris Weight</span>
-                <span id="spec-debris-weight">1.68 kg</span>
+                <span id="spec-debris-weight">6.30 kg</span>
               </div>
               <div class="spec-row">
-                <span>Total Displaced Volume</span>
-                <span id="spec-displaced-volume">7.68 Liters</span>
+                <span>Total Operational Weight</span>
+                <span id="spec-displaced-volume">12.30 kg</span>
               </div>
               <div class="spec-row">
                 <span>Cruising Draft Height</span>
-                <span id="spec-draft-fraction">45.7%</span>
+                <span id="spec-draft-fraction">43.9%</span>
               </div>
               <div class="spec-row">
-                <span>Twin Hull Volume (Max)</span>
-                <span>16.8 Liters</span>
+                <span>Twin Hull Volume (Max displacement)</span>
+                <span>28.0 Liters</span>
               </div>
             </div>
 
@@ -1330,7 +1330,7 @@
               </div>
               <div class="spec-row">
                 <span>Designed Water Line Draft</span>
-                <span>Cruising 59.5% at 10kg limit</span>
+                <span>Cruising 75% at 21.0 kg limit</span>
               </div>
             </div>
 
@@ -1446,7 +1446,7 @@
                   <td>7.38</td>
                   <td>6.24</td>
                   <td>11 NTU</td>
-                  <td>0.12 kg</td>
+                  <td>1.12 kg</td>
                   <td>[OK] Mission Grid Node 1</td>
                 </tr>
                 <tr>
@@ -1455,7 +1455,7 @@
                   <td>8.12</td>
                   <td>5.10</td>
                   <td>24 NTU</td>
-                  <td>0.54 kg</td>
+                  <td>4.54 kg</td>
                   <td>[WARN] Algae Bloom Detected</td>
                 </tr>
                 <tr>
@@ -1464,7 +1464,7 @@
                   <td>7.22</td>
                   <td>6.81</td>
                   <td>9 NTU</td>
-                  <td>0.08 kg</td>
+                  <td>0.88 kg</td>
                   <td>[OK] Mission Grid Node 4</td>
                 </tr>
                 <tr>
@@ -1473,7 +1473,7 @@
                   <td>7.41</td>
                   <td>6.18</td>
                   <td>12 NTU</td>
-                  <td>0.22 kg</td>
+                  <td>2.22 kg</td>
                   <td>[OK] Mission Grid Node 2</td>
                 </tr>
               </tbody>
@@ -1569,66 +1569,63 @@
     // 1. DATA INITIALIZATION & SIMULATION VARIABLES
     // ==========================================================================
     
-    // Lake coordinates configurations
+    // Chennai Stagnant Lake Coordinates and outlines
     const lakePresets = {
-      ulsoor: {
-        center: [12.9796, 77.6221],
+      velachery: {
+        center: [12.9806, 80.2198],
         zoom: 16,
         outline: [
-          [12.9822, 77.6190], [12.9823, 77.6210], [12.9816, 77.6225],
-          [12.9808, 77.6248], [12.9798, 77.6253], [12.9780, 77.6252],
-          [12.9765, 77.6242], [12.9764, 77.6225], [12.9774, 77.6212],
-          [12.9782, 77.6202], [12.9798, 77.6186], [12.9812, 77.6184]
+          [12.9835, 80.2175], [12.9840, 80.2215], [12.9818, 80.2235],
+          [12.9785, 80.2225], [12.9772, 80.2195], [12.9788, 80.2165],
+          [12.9815, 80.2160]
         ],
         rovers: {
-          1: { coords: [12.9798, 77.6212], pathIndex: 0, path: [[12.9798, 77.6212], [12.9804, 77.6222], [12.9808, 77.6234], [12.9802, 77.6241], [12.9792, 77.6235], [12.9788, 77.6221], [12.9790, 77.6210]] },
-          2: { coords: [12.9781, 77.6226], pathIndex: 0, path: [[12.9781, 77.6226], [12.9786, 77.6238], [12.9780, 77.6248], [12.9772, 77.6240], [12.9770, 77.6228], [12.9776, 77.6220]] },
-          3: { coords: [12.9810, 77.6200], pathIndex: 0, path: [[12.9810, 77.6200], [12.9816, 77.6212], [12.9812, 77.6222], [12.9806, 77.6218], [12.9800, 77.6208], [12.9804, 77.6196]] }
+          1: { coords: [12.9815, 80.2185], pathIndex: 0, path: [[12.9815, 80.2185], [12.9825, 80.2198], [12.9820, 80.2212], [12.9805, 80.2218], [12.9792, 80.2210], [12.9790, 80.2185]] },
+          2: { coords: [12.9795, 80.2205], pathIndex: 0, path: [[12.9795, 80.2205], [12.9805, 80.2215], [12.9800, 80.2222], [12.9788, 80.2210]] },
+          3: { coords: [12.9822, 80.2170], pathIndex: 0, path: [[12.9822, 80.2170], [12.9828, 80.2190], [12.9815, 80.2195], [12.9808, 80.2180]] }
         },
         hotZones: [
-          { center: [12.9783, 77.6236], radius: 70, type: "algae", color: "#f59e0b", desc: "Algae Bloom Area (Elevated Chlorophyll)" },
-          { center: [12.9801, 77.6218], radius: 50, type: "chemical", color: "#ef4444", desc: "Chemical Contamination Plume (Low DO / Extreme pH)" }
+          { center: [12.9795, 80.2210], radius: 65, type: "algae", color: "#f59e0b", desc: "Velachery Algae Canopy (High Eutrophication)" },
+          { center: [12.9818, 80.2192], radius: 45, type: "chemical", color: "#ef4444", desc: "Chemical Contamination Plume (Runoff Outlet)" }
         ]
       },
-      sankey: {
-        center: [13.0076, 77.5756],
+      retteri: {
+        center: [13.1412, 80.2078],
         zoom: 16,
         outline: [
-          [13.0105, 77.5732], [13.0104, 77.5760], [13.0090, 77.5780],
-          [13.0070, 77.5782], [13.0055, 77.5772], [13.0050, 77.5750],
-          [13.0062, 77.5734], [13.0080, 77.5728]
+          [13.1465, 80.2052], [13.1450, 80.2120], [13.1390, 80.2115],
+          [13.1365, 80.2065], [13.1402, 80.2035]
         ],
         rovers: {
-          1: { coords: [13.0085, 77.5742], pathIndex: 0, path: [[13.0085, 77.5742], [13.0095, 77.5755], [13.0088, 77.5770], [13.0070, 77.5772], [13.0060, 77.5758]] },
-          2: { coords: [13.0065, 77.5745], pathIndex: 0, path: [[13.0065, 77.5745], [13.0075, 77.5760], [13.0070, 77.5770], [13.0058, 77.5750]] },
-          3: { coords: [13.0095, 77.5740], pathIndex: 0, path: [[13.0095, 77.5740], [13.0098, 77.5758], [13.0090, 77.5765], [13.0080, 77.5750]] }
+          1: { coords: [13.1425, 80.2065], pathIndex: 0, path: [[13.1425, 80.2065], [13.1438, 80.2095], [13.1415, 80.2105], [13.1398, 80.2078]] },
+          2: { coords: [13.1395, 80.2085], pathIndex: 0, path: [[13.1395, 80.2085], [13.1408, 80.2102], [13.1382, 80.2098]] },
+          3: { coords: [13.1445, 80.2060], pathIndex: 0, path: [[13.1445, 80.2060], [13.1448, 80.2090], [13.1425, 80.2085]] }
         },
         hotZones: [
-          { center: [13.0088, 77.5765], radius: 60, type: "algae", color: "#f59e0b", desc: "Algae Bloom Area (Elevated Chlorophyll)" },
-          { center: [13.0070, 77.5752], radius: 45, type: "chemical", color: "#ef4444", desc: "Chemical Contamination Plume (Low DO / Extreme pH)" }
+          { center: [13.1428, 80.2095], radius: 75, type: "algae", color: "#f59e0b", desc: "Retteri East Algae Bloom" },
+          { center: [13.1405, 80.2068], radius: 50, type: "chemical", color: "#ef4444", desc: "Retteri Industrial Effluent Plume" }
         ]
       },
-      yediyur: {
-        center: [12.9304, 77.5815],
-        zoom: 17,
+      porur: {
+        center: [13.0298, 80.1472],
+        zoom: 16,
         outline: [
-          [12.9318, 77.5802], [12.9320, 77.5820], [12.9312, 77.5828],
-          [12.9298, 77.5828], [12.9290, 77.5822], [12.9290, 77.5805],
-          [12.9304, 77.5798]
+          [13.0335, 80.1425], [13.0332, 80.1515], [13.0280, 80.1520],
+          [13.0255, 80.1455], [13.0278, 80.1418]
         ],
         rovers: {
-          1: { coords: [12.9308, 77.5810], pathIndex: 0, path: [[12.9308, 77.5810], [12.9315, 77.5818], [12.9305, 77.5825], [12.9298, 77.5815]] },
-          2: { coords: [12.9295, 77.5812], pathIndex: 0, path: [[12.9295, 77.5812], [12.9304, 77.5820], [12.9298, 77.5824], [12.9292, 77.5815]] },
-          3: { coords: [12.9312, 77.5808], pathIndex: 0, path: [[12.9312, 77.5808], [12.9316, 77.5818], [12.9310, 77.5822], [12.9304, 77.5812]] }
+          1: { coords: [13.0305, 80.1450], pathIndex: 0, path: [[13.0305, 80.1450], [13.0318, 80.1488], [13.0292, 80.1495], [13.0275, 80.1462]] },
+          2: { coords: [13.0282, 80.1470], pathIndex: 0, path: [[13.0282, 80.1470], [13.0295, 80.1490], [13.0272, 80.1485]] },
+          3: { coords: [13.0322, 80.1440], pathIndex: 0, path: [[13.0322, 80.1440], [13.0325, 80.1485], [13.0302, 80.1472]] }
         },
         hotZones: [
-          { center: [12.9305, 77.5822], radius: 40, type: "algae", color: "#f59e0b", desc: "Algae Bloom Area (Elevated Chlorophyll)" },
-          { center: [12.9298, 77.5810], radius: 30, type: "chemical", color: "#ef4444", desc: "Chemical Contamination Plume (Low DO / Extreme pH)" }
+          { center: [13.0310, 80.1490], radius: 70, type: "algae", color: "#f59e0b", desc: "Porur Hyacinth & Algal Canopy" },
+          { center: [13.0285, 80.1450], radius: 40, type: "chemical", color: "#ef4444", desc: "Porur Inflow Stagnation Plume" }
         ]
       }
     };
 
-    let activePreset = 'ulsoor';
+    let activePreset = 'velachery';
 
     // Settings calibrated variables (loaded from localStorage or defaults)
     let config = {
@@ -1653,11 +1650,11 @@
       document.getElementById('config-ph-lower').value = config.phLower;
     });
 
-    // Swarm configuration
+    // Swarm configuration (initialized to Velachery, Chennai)
     const swarm = {
       1: {
         id: "EcoFloat-1",
-        coords: [...lakePresets.ulsoor.rovers[1].coords],
+        coords: [...lakePresets.velachery.rovers[1].coords],
         heading: 45,
         battery: 89,
         netCapacity: 42,
@@ -1672,7 +1669,7 @@
         waypointLine: null,
         waypointMarker: null,
         targetWaypoint: null,
-        path: [...lakePresets.ulsoor.rovers[1].path],
+        path: [...lakePresets.velachery.rovers[1].path],
         // Full map elements
         markerFull: null,
         waypointLineFull: null,
@@ -1680,7 +1677,7 @@
       },
       2: {
         id: "EcoFloat-2",
-        coords: [...lakePresets.ulsoor.rovers[2].coords],
+        coords: [...lakePresets.velachery.rovers[2].coords],
         heading: 120,
         battery: 86,
         netCapacity: 61,
@@ -1695,14 +1692,14 @@
         waypointLine: null,
         waypointMarker: null,
         targetWaypoint: null,
-        path: [...lakePresets.ulsoor.rovers[2].path],
+        path: [...lakePresets.velachery.rovers[2].path],
         markerFull: null,
         waypointLineFull: null,
         waypointMarkerFull: null
       },
       3: {
         id: "EcoFloat-3",
-        coords: [...lakePresets.ulsoor.rovers[3].coords],
+        coords: [...lakePresets.velachery.rovers[3].coords],
         heading: 270,
         battery: 90,
         netCapacity: 27,
@@ -1717,7 +1714,7 @@
         waypointLine: null,
         waypointMarker: null,
         targetWaypoint: null,
-        path: [...lakePresets.ulsoor.rovers[3].path],
+        path: [...lakePresets.velachery.rovers[3].path],
         markerFull: null,
         waypointLineFull: null,
         waypointMarkerFull: null
@@ -1729,7 +1726,7 @@
     let totalAlgaeHarvested = 312.8;
 
     // Environmental Hot Zones on map (Plumes & Blooms)
-    let hotZones = JSON.parse(JSON.stringify(lakePresets.ulsoor.hotZones));
+    let hotZones = JSON.parse(JSON.stringify(lakePresets.velachery.hotZones));
 
     // ==========================================================================
     // 2. LEAFLET MAP INITIALIZATION & STYLING
@@ -1743,7 +1740,7 @@
       map = L.map('lake-map', {
         zoomControl: true,
         attributionControl: false
-      }).setView(lakePresets.ulsoor.center, lakePresets.ulsoor.zoom);
+      }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
@@ -1753,7 +1750,7 @@
       fullMap = L.map('full-lake-map', {
         zoomControl: true,
         attributionControl: false
-      }).setView(lakePresets.ulsoor.center, lakePresets.ulsoor.zoom);
+      }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
@@ -1888,7 +1885,7 @@
       hotZones = JSON.parse(JSON.stringify(preset.hotZones));
 
       renderLakeAssets();
-      appendLog('sys', `Preset changed to ${val.toUpperCase()} LAKE. Coordinates and telemetry paths relocated.`);
+      appendLog('sys', `Preset changed to ${val.toUpperCase()} LAKE (Chennai). Telemetry paths relocated.`);
     }
 
     function clearAllWaypoints() {
@@ -2037,14 +2034,11 @@
           // Calculate Steering Error delta_e = X_c - 320
           let steeringError = 0;
           if (dist > 0.0001) {
-            // Simulated visual horizontal offset (random swing towards target heading)
             steeringError = Math.floor((Math.random() - 0.5) * 60);
           }
           rover.steering_error = steeringError;
 
           // Proportional motor speeds
-          // Speed_port = Base_Speed + Kp * delta_e
-          // Speed_starboard = Base_Speed - Kp * delta_e
           rover.port_pwm = Math.max(0, Math.min(255, Math.round(config.baseSpeed + config.kp * steeringError)));
           rover.starboard_pwm = Math.max(0, Math.min(255, Math.round(config.baseSpeed - config.kp * steeringError)));
 
@@ -2065,13 +2059,11 @@
             rover.starboard_pwm = 0;
           } else {
             // Interpolate step
-            // Base speed config directly alters the movement step size!
             const stepSize = 0.000025 + (config.baseSpeed / 100) * 0.00004; 
             const dLat = (latDiff / dist) * stepSize;
             const dLng = (lngDiff / dist) * stepSize;
             rover.coords = [currentPos[0] + dLat, currentPos[1] + dLng];
 
-            // Calculate compass angle
             let angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
             if (angle < 0) angle += 360;
             rover.heading = angle;
@@ -2096,8 +2088,8 @@
               basePh = 8.2 + (Math.random() - 0.5) * 0.15;
               baseDo = 4.8 + (Math.random() - 0.5) * 0.2;
               baseTurbidity = 26 + Math.floor(Math.random() * 5);
-              rover.netCapacity = Math.min(100, rover.netCapacity + 0.35); // Net fills up fast with Algae
-              rover.activity = "TARGET_LOCKED"; // using active python state!
+              rover.netCapacity = Math.min(100, rover.netCapacity + 0.35); // Net fills up fast
+              rover.activity = "TARGET_LOCKED";
               
               if (Math.random() < 0.04) {
                 appendLog('alert', `Rover ${rover.id} [TARGET_LOCKED]: Dense algal canopy detected, MobileNetV2 confidence 88%.`);
@@ -2106,10 +2098,10 @@
               basePh = 6.1 + (Math.random() - 0.5) * 0.2;
               baseDo = 3.6 + (Math.random() - 0.5) * 0.2;
               baseTurbidity = 34 + Math.floor(Math.random() * 6);
-              rover.activity = "ACTIVE_INTERCEPTION"; // using active python state
+              rover.activity = "ACTIVE_INTERCEPTION";
               
               if (rover.mode === "RETREAT") {
-                rover.activity = "DEBRIS_CAPTURE"; // state change
+                rover.activity = "DEBRIS_CAPTURE";
                 // Reduce plume radius slightly representing active remediation
                 zone.radius = Math.max(5, zone.radius - 0.5);
                 if (zone.circleEl) zone.circleEl.setRadius(zone.radius);
@@ -2141,7 +2133,7 @@
           rover.battery = Math.min(100, rover.battery + 0.02);
         }
 
-        // 4. Update Map Marker positions and rotations
+        // 4. Update Map Marker positions
         if (rover.marker) {
           rover.marker.setLatLng(rover.coords);
           const container = document.getElementById(`boat-icon-container-${id}`);
@@ -2154,7 +2146,6 @@
           rover.markerFull.setLatLng(rover.coords);
         }
 
-        // Calculations
         let doScore = Math.max(0, 100 - Math.abs(6.5 - rover.do) * 20);
         let phScore = Math.max(0, 100 - Math.abs(7.4 - rover.ph) * 30);
         let turbScore = Math.max(0, 100 - rover.turbidity * 2);
@@ -2163,8 +2154,8 @@
       });
 
       // Update cumulative stats
-      totalPlasticsCollected += 0.04;
-      totalAlgaeHarvested += 0.12;
+      totalPlasticsCollected += 0.08; // slightly faster collection with 15kg nets
+      totalAlgaeHarvested += 0.24;
 
       updateUIDom(sumWqi / 3, totalActiveBattery / 3);
       tickChartsData();
@@ -2179,7 +2170,6 @@
       document.getElementById('metric-battery').innerText = `${avgBattery.toFixed(0)}%`;
       document.getElementById('metric-wqi').innerText = avgWqi.toFixed(1);
 
-      // Adjust WQI Status text
       const wqiStatus = document.getElementById('metric-wqi-status');
       if (avgWqi > 80) {
         wqiStatus.innerText = "Excellent Quality";
@@ -2192,27 +2182,25 @@
         wqiStatus.style.color = "var(--color-warning)";
       }
 
-      // Sync Table and Specs Tab values
       const activeRover = swarm[activeRoverId];
 
-      // Physical specs recalculations on the fly
-      // Total Mass = 6.0kg dry + Debris load (max payload 4.0kg)
-      const currentDebris = (activeRover.netCapacity / 100) * 4.0;
+      // Physical specs recalculations on the fly for 15.0 kg payload limits!
+      // Total Mass = 6.0kg dry + Debris load (max payload 15.0kg)
+      const currentDebris = (activeRover.netCapacity / 100) * 15.0;
       const totalMass = 6.0 + currentDebris;
-      // Draft fraction = totalMass / 16.8 Liters twin displacement
-      const draftFraction = (totalMass / 16.8) * 100;
-      // Battery voltage reading (nominal LiFePO4 12V voltage range 10.0V - 13.3V)
+      // Draft fraction = totalMass / 28.0 Liters max twin displacement
+      const draftFraction = (totalMass / 28.0) * 100;
+      // Battery voltage nominal 10V - 13.3V
       const batteryVoltage = 10.0 + (activeRover.battery / 100) * 3.3;
 
       document.getElementById('spec-debris-weight').innerText = `${currentDebris.toFixed(2)} kg`;
-      document.getElementById('spec-displaced-volume').innerText = `${totalMass.toFixed(2)} Liters`;
+      document.getElementById('spec-displaced-volume').innerText = `${totalMass.toFixed(2)} kg / Liters`;
       document.getElementById('spec-draft-fraction').innerText = `${draftFraction.toFixed(1)}%`;
       document.getElementById('spec-battery-voltage').innerText = `${batteryVoltage.toFixed(2)} V`;
       document.getElementById('spec-port-pwm').innerText = `${activeRover.port_pwm || 0} / 255`;
       document.getElementById('spec-starboard-pwm').innerText = `${activeRover.starboard_pwm || 0} / 255`;
       document.getElementById('spec-steering-error').innerText = `${activeRover.steering_error.toFixed(1)} px (${activeRover.steering_error > 0 ? 'Right' : activeRover.steering_error < 0 ? 'Left' : 'Centered'})`;
       
-      // AI Confidence fluctuator
       const randConf = (activeRover.activity === "TARGET_LOCKED" || activeRover.activity === "ACTIVE_INTERCEPTION")
         ? 75 + Math.random() * 20 
         : 0;
@@ -2242,7 +2230,6 @@
         document.getElementById(`row-act-${id}`).innerText = rover.activity;
       });
 
-      // Active row highlight
       for (let i = 1; i <= 3; i++) {
         const row = document.getElementById(`rover-row-${i}`);
         if (i == activeRoverId) {
@@ -2255,7 +2242,6 @@
       }
 
       // Sync Global Alerts indicator
-      // Check if chemical plumes exceed limit config thresholds
       const alertState = Object.values(swarm).some(r => r.ph < config.phLower || r.ph > config.phUpper || r.do < config.doLimit);
       const systemDot = document.getElementById('system-status-dot');
       const systemText = document.getElementById('system-status-text');
@@ -2291,17 +2277,14 @@
     // 6. ACTION HANDLERS & MOCK CONTROL FUNCTIONS
     // ==========================================================================
     function switchPanel(panelId) {
-      // Toggle nav icons classes
       const items = document.querySelectorAll('.nav-item');
       items.forEach(el => el.classList.remove('active'));
       document.getElementById(`nav-${panelId}`).classList.add('active');
 
-      // Toggle view layouts
       const panels = document.querySelectorAll('.view-panel');
       panels.forEach(el => el.classList.remove('active-panel'));
       document.getElementById(`panel-${panelId}`).classList.add('active-panel');
 
-      // Invalidate map sizes to draw leaflet tiles properly
       setTimeout(() => {
         if (panelId === 'overview') map.invalidateSize();
         if (panelId === 'map') fullMap.invalidateSize();
@@ -2314,7 +2297,6 @@
       document.getElementById('chart-rover-badge').style.color = swarm[id].color;
       document.getElementById('chart-rover-badge').style.background = `${swarm[id].color}12`;
 
-      // Update map active marker class
       Object.keys(swarm).forEach((key) => {
         const el = document.getElementById(`boat-icon-container-${key}`);
         if (el) {
@@ -2392,9 +2374,10 @@
         return;
       }
 
+      // Add collected loads to totals (scaling payload to 15.0 kg!)
       const collectedLoad = rover.netCapacity;
-      const plasticPortion = collectedLoad * 0.35 * 0.15;
-      const algaePortion = collectedLoad * 0.65 * 0.25;
+      const plasticPortion = collectedLoad * 0.35 * 0.15; // scales up to 15kg load!
+      const algaePortion = collectedLoad * 0.65 * 0.15;
 
       totalPlasticsCollected += plasticPortion;
       totalAlgaeHarvested += algaePortion;
@@ -2452,7 +2435,7 @@
       appendLog('sys', `BIST (Built-in Self Test) Diagnostics started for ${rover.id}...`);
       setTimeout(() => appendLog('sens', `  [OK] Electrochemical telemetry probes validated.`), 500);
       setTimeout(() => appendLog('nav', `  [OK] Kp steering proportional loops locked at Kp=${config.kp}.`), 1000);
-      setTimeout(() => appendLog('act', `  [OK] Dual DC underwater thrusters continuity: PWM range check ok.`), 1500);
+      setTimeout(() => appendLog('act', `  [OK] Dual DC thrusters active. Designed net capacity 15.0 kg validated.`), 1500);
       setTimeout(() => appendLog('sys', `BIST DIAGNOSTIC COMPLETE: ${rover.id} systems operational.`), 2000);
     }
 
@@ -2526,7 +2509,6 @@
       appendLog('sys', 'Configuration profiles reset to hardware calibration defaults.');
     }
 
-    // Export CSV Simulation
     function exportTelemetryCSV() {
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "Timestamp,Vessel,pH,DO(mg/L),Turbidity(NTU),Load(%),Activity\r\n";
@@ -2614,8 +2596,8 @@
 
       setInterval(updateSimulation, 1500);
 
-      appendLog('sys', 'EcoFloat Smart City Swarm initialized.');
-      appendLog('nav', 'ROS node active: Swarm waypoints mapped for Ulsoor Lake.');
+      appendLog('sys', 'EcoFloat Smart City Swarm initialized (Chennai sector).');
+      appendLog('nav', 'ROS node active: Swarm waypoints mapped for Velachery Lake.');
       appendLog('sens', 'All sensor probes active. Recurrent hyperspectral radiometry locks verified.');
       appendLog('sys', 'Primary base dock link established. Swarm mode set to AUTONOMOUS.');
     };
