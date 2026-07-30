@@ -991,7 +991,7 @@
         </div>
         <div class="card-content">
           <span class="card-label">Plastics Collected</span>
-          <span class="card-value" id="metric-plastics">142.4 kg</span>
+          <span class="card-value" id="metric-plastics">4.3 kg</span>
           <span class="card-subtext">Cumulative Swarm Total</span>
         </div>
       </div>
@@ -1003,7 +1003,7 @@
         </div>
         <div class="card-content">
           <span class="card-label">Algae Harvested</span>
-          <span class="card-value" id="metric-algae">312.8 kg</span>
+          <span class="card-value" id="metric-algae">5.7 kg</span>
           <span class="card-subtext">Chlorophyll Extraction</span>
         </div>
       </div>
@@ -1722,14 +1722,16 @@
     };
 
     let activeRoverId = 1;
-    let totalPlasticsCollected = 142.4;
-    let totalAlgaeHarvested = 312.8;
+    
+    // Initial values set to 4.3 kg (plastics) and 5.7 kg (algae) as requested!
+    let totalPlasticsCollected = 4.3;
+    let totalAlgaeHarvested = 5.7;
 
     // Environmental Hot Zones on map (Plumes & Blooms)
     let hotZones = JSON.parse(JSON.stringify(lakePresets.velachery.hotZones));
 
     // ==========================================================================
-    // 2. LEAFLET MAP INITIALIZATION & STYLING
+    // 2. LEAFLET MAP INITIALIZATION & STYLING (ESRI SATELLITE TILES)
     // ==========================================================================
     let map, fullMap;
     let mapLakePolygon, fullMapLakePolygon;
@@ -1742,8 +1744,9 @@
         attributionControl: false
       }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20
+      // Use ESRI Satellite Tiles to focus on actual lake waterbody
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
       }).addTo(map);
 
       // 2. Full-Screen Control Map
@@ -1752,8 +1755,8 @@
         attributionControl: false
       }).setView(lakePresets.velachery.center, lakePresets.velachery.zoom);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
       }).addTo(fullMap);
 
       renderLakeAssets();
@@ -1780,21 +1783,19 @@
       mapHotZones = [];
       fullMapHotZones = [];
 
-      // Add lake polygons
+      // Highlight the lake polygon boundary on top of the satellite tiles
       mapLakePolygon = L.polygon(preset.outline, {
-        color: 'rgba(14, 165, 233, 0.4)',
-        fillColor: 'rgba(14, 165, 233, 0.05)',
-        fillOpacity: 0.3,
-        weight: 2,
-        dashArray: '5, 5'
+        color: '#0ea5e9',
+        fillColor: '#0ea5e9',
+        fillOpacity: 0.18,
+        weight: 2.5
       }).addTo(map);
 
       fullMapLakePolygon = L.polygon(preset.outline, {
-        color: 'rgba(14, 165, 233, 0.4)',
-        fillColor: 'rgba(14, 165, 233, 0.05)',
-        fillOpacity: 0.3,
-        weight: 2,
-        dashArray: '5, 5'
+        color: '#0ea5e9',
+        fillColor: '#0ea5e9',
+        fillOpacity: 0.18,
+        weight: 2.5
       }).addTo(fullMap);
 
       // Render hotzones
@@ -1802,18 +1803,18 @@
         const c1 = L.circle(zone.center, {
           color: zone.color,
           fillColor: zone.color,
-          fillOpacity: 0.15,
-          weight: 1.5,
-          dashArray: '3, 6'
+          fillOpacity: 0.22,
+          weight: 2,
+          dashArray: '4, 4'
         }).addTo(map).bindPopup(`<strong>${zone.desc}</strong>`);
         mapHotZones.push(c1);
 
         const c2 = L.circle(zone.center, {
           color: zone.color,
           fillColor: zone.color,
-          fillOpacity: 0.15,
-          weight: 1.5,
-          dashArray: '3, 6'
+          fillOpacity: 0.22,
+          weight: 2,
+          dashArray: '4, 4'
         }).addTo(fullMap).bindPopup(`<strong>${zone.desc}</strong>`);
         fullMapHotZones.push(c2);
         
@@ -1831,7 +1832,7 @@
         if (rover.markerFull) fullMap.removeLayer(rover.markerFull);
 
         const htmlIcon = `<div class="boat-icon-container" id="boat-icon-container-${id}">
-                   <div class="boat-icon-circle ${id == activeRoverId ? 'active-rover' : ''}" style="border-color: ${rover.color};">
+                   <div class="boat-icon-circle ${id == activeRoverId ? 'active-rover' : ''}" style="border-color: ${rover.color}; background-color: rgba(10, 10, 15, 0.85);">
                      <div class="boat-heading-arrow" style="border-bottom-color: ${rover.color}; transform: rotate(${rover.heading}deg);"></div>
                      ${id}
                    </div>
@@ -2153,9 +2154,9 @@
         totalActiveBattery += rover.battery;
       });
 
-      // Update cumulative stats
-      totalPlasticsCollected += 0.08; // slightly faster collection with 15kg nets
-      totalAlgaeHarvested += 0.24;
+      // Update cumulative stats (simulated slow trickle collection additions)
+      totalPlasticsCollected += 0.004; 
+      totalAlgaeHarvested += 0.008;
 
       updateUIDom(sumWqi / 3, totalActiveBattery / 3);
       tickChartsData();
@@ -2165,8 +2166,8 @@
     // 5. DOM INTERFACES & RENDER FUNCTIONS
     // ==========================================================================
     function updateUIDom(avgWqi, avgBattery) {
-      document.getElementById('metric-plastics').innerText = `${totalPlasticsCollected.toFixed(1)} kg`;
-      document.getElementById('metric-algae').innerText = `${totalAlgaeHarvested.toFixed(1)} kg`;
+      document.getElementById('metric-plastics').innerText = `${totalPlasticsCollected.toFixed(2)} kg`;
+      document.getElementById('metric-algae').innerText = `${totalAlgaeHarvested.toFixed(2)} kg`;
       document.getElementById('metric-battery').innerText = `${avgBattery.toFixed(0)}%`;
       document.getElementById('metric-wqi').innerText = avgWqi.toFixed(1);
 
@@ -2184,13 +2185,10 @@
 
       const activeRover = swarm[activeRoverId];
 
-      // Physical specs recalculations on the fly for 15.0 kg payload limits!
-      // Total Mass = 6.0kg dry + Debris load (max payload 15.0kg)
+      // Physical specs calculations for 15.0 kg payload limits
       const currentDebris = (activeRover.netCapacity / 100) * 15.0;
       const totalMass = 6.0 + currentDebris;
-      // Draft fraction = totalMass / 28.0 Liters max twin displacement
       const draftFraction = (totalMass / 28.0) * 100;
-      // Battery voltage nominal 10V - 13.3V
       const batteryVoltage = 10.0 + (activeRover.battery / 100) * 3.3;
 
       document.getElementById('spec-debris-weight').innerText = `${currentDebris.toFixed(2)} kg`;
@@ -2374,9 +2372,8 @@
         return;
       }
 
-      // Add collected loads to totals (scaling payload to 15.0 kg!)
       const collectedLoad = rover.netCapacity;
-      const plasticPortion = collectedLoad * 0.35 * 0.15; // scales up to 15kg load!
+      const plasticPortion = collectedLoad * 0.35 * 0.15;
       const algaePortion = collectedLoad * 0.65 * 0.15;
 
       totalPlasticsCollected += plasticPortion;
@@ -2598,7 +2595,7 @@
 
       appendLog('sys', 'EcoFloat Smart City Swarm initialized (Chennai sector).');
       appendLog('nav', 'ROS node active: Swarm waypoints mapped for Velachery Lake.');
-      appendLog('sens', 'All sensor probes active. Recurrent hyperspectral radiometry locks verified.');
+      appendLog('sens', 'All sensor probes active. Recurrent hyperspectral radiometry satellite locks verified.');
       appendLog('sys', 'Primary base dock link established. Swarm mode set to AUTONOMOUS.');
     };
   </script>
