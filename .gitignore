@@ -1,0 +1,29 @@
+# System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# MS Office Temp Files
+~$*.docx
+~$*.pptx
+~$*.xlsx
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# CAD and Meshes caches
+*.stl
+*.step
+*.stp
+*.3mf
+*.f3d
+!/models/cad/   # DO NOT ignore our organized CAD files!
+
+# Local test outputs and logfiles
+*.log
+*.tmp
